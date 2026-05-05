@@ -98,7 +98,7 @@ class MainWindow(QMainWindow):
         super().__init__()
         self.setWindowTitle("Aetheris Classifier v6 Premium")
         self.setWindowFlags(Qt.WindowType.FramelessWindowHint | Qt.WindowType.Window)
-        self.setMinimumSize(1280, 900)
+        self.setMinimumSize(1280, 860)
         self.setWindowIcon(QIcon("Aetheris.png"))
         self.resize(1440, 900)
         self._drag_active = False
