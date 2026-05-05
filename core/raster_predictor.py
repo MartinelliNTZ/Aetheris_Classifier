@@ -1,6 +1,7 @@
 ﻿from __future__ import annotations
 
 import math
+from time import perf_counter
 from pathlib import Path
 from typing import Callable, Optional
 
@@ -20,16 +21,22 @@ class RasterPredictor:
         alpha_threshold: int = 250,
         ram_limit_bytes: Optional[int] = None,
         progress_callback: Optional[Callable[[int, str], None]] = None,
+        logger: Optional[Callable[[str], None]] = None,
     ):
         self.batch_size = batch_size
         self.use_mask = use_mask
         self.alpha_threshold = alpha_threshold
         self.ram_limit_bytes = ram_limit_bytes
         self.progress_callback = progress_callback
+        self.logger = logger
 
     def _report_progress(self, percent: int, message: str) -> None:
         if self.progress_callback:
             self.progress_callback(percent, message)
+
+    def _log(self, message: str) -> None:
+        if self.logger:
+            self.logger(message)
 
     def predict(
         self,
@@ -59,6 +66,14 @@ class RasterPredictor:
         ram_to_use = min(ram_available, self.ram_limit_bytes) if self.ram_limit_bytes else ram_available
         chunk_lines = max(256, calculate_chunk_lines(width, n_bands_feature, ram_to_use) // 12)
         num_chunks = math.ceil(height / chunk_lines)
+        total_pixels = height * width
+
+        self._log(
+            f"RasterPredictor: {width}x{height} | bands={n_bands_total} | feat={n_bands_feature} | "
+            f"RAM disponivel={ram_available / (1024 ** 3):.2f}GB | "
+            f"RAM limite uso={ram_to_use / (1024 ** 3):.2f}GB | chunk_lines={chunk_lines} | chunks={num_chunks}"
+        )
+        self._log("RasterPredictor: loop de chunks sequencial; paralelismo interno via GDAL threads + TensorFlow threads.")
 
         out_meta.update(
             {
@@ -79,6 +94,7 @@ class RasterPredictor:
 
         pixels_ok = 0
         predicted_pixels = 0
+        started_at = perf_counter()
         tasks = []
         for i in range(num_chunks):
             row_start = i * chunk_lines
@@ -88,8 +104,11 @@ class RasterPredictor:
         with rasterio.open(str(output_path), "w", **out_meta) as dst:
             with rasterio.open(str(source_path)) as src:
                 for chunk_index, (row_start, n_rows) in enumerate(tasks):
+                    chunk_started_at = perf_counter()
                     window = Window(0, row_start, width, n_rows)
+                    read_started_at = perf_counter()
                     chunk_data = src.read(window=window)
+                    read_seconds = perf_counter() - read_started_at
 
                     if self.use_mask and n_bands_total > n_bands_feature:
                         mask_band = chunk_data[-1]
@@ -105,6 +124,7 @@ class RasterPredictor:
 
                     result_arr = np.full(flattened.shape[0], 255, dtype=np.uint8)
                     num_valid = int(valid_mask.sum())
+                    infer_started_at = perf_counter()
                     if num_valid > 0:
                         pred_raw = model.predict(flattened[valid_mask], batch_size=self.batch_size, verbose=0)
                         if pred_raw.ndim == 2 and pred_raw.shape[1] == 1:
@@ -113,11 +133,26 @@ class RasterPredictor:
                             pred_cls = np.argmax(pred_raw, axis=1).astype(np.uint8)
                         result_arr[valid_mask] = pred_cls
                         predicted_pixels += int(pred_cls.size)
+                    infer_seconds = perf_counter() - infer_started_at
 
+                    write_started_at = perf_counter()
                     dst.write(result_arr.reshape(1, n_rows, width), window=window)
+                    write_seconds = perf_counter() - write_started_at
                     pixels_ok += num_valid
                     percent = int((chunk_index + 1) / num_chunks * 100)
                     self._report_progress(percent, f"Chunk {chunk_index + 1}/{num_chunks}")
+                    chunk_total_seconds = perf_counter() - chunk_started_at
+                    row_end = row_start + n_rows - 1
+                    self._log(
+                        f"Chunk {chunk_index + 1}/{num_chunks}: rows={row_start}-{row_end} | "
+                        f"valid={num_valid:,} | read={read_seconds:.3f}s | "
+                        f"infer={infer_seconds:.3f}s | write={write_seconds:.3f}s | total={chunk_total_seconds:.3f}s"
+                    )
+                    mem = psutil.virtual_memory()
+                    self._log(
+                        f"Chunk {chunk_index + 1}/{num_chunks}: RAM usada={mem.percent:.1f}% | "
+                        f"disponivel={mem.available / (1024 ** 3):.2f}GB"
+                    )
 
         if pixels_ok == 0 or predicted_pixels == 0:
             try:
@@ -134,6 +169,11 @@ class RasterPredictor:
             dst.build_overviews(overviews, rasterio.enums.Resampling.nearest)
             dst.update_tags(ns="rio_overview", resampling="nearest")
 
+        total_seconds = max(perf_counter() - started_at, 1e-9)
+        self._log(
+            f"RasterPredictor concluido: pixels_validos={pixels_ok:,} | pixels_preditos={predicted_pixels:,} | "
+            f"tempo_total={total_seconds:.2f}s | throughput={total_pixels / total_seconds:.2f} px/s"
+        )
         self._report_progress(100, "Predicao concluida")
         return output_path
 

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import os
 import shutil
 from dataclasses import dataclass
 from datetime import datetime
@@ -8,6 +9,7 @@ from pathlib import Path
 from typing import Callable, Dict, List, Optional, Tuple
 
 import geopandas as gpd
+import tensorflow as tf
 from tensorflow.keras.models import load_model
 from tensorflow.keras.optimizers import Adam
 
@@ -389,7 +391,20 @@ class ClassifierPipeline:
         self._log("Iniciando pipeline do classificador")
 
         self.hardware_info = configure_hardware(self.config.ram_limit_pct)
-        self._log(f"Hardware: {self.hardware_info.device} | RAM limite {self.hardware_info.ram_limit_gb:.2f} GB")
+        intra_threads = tf.config.threading.get_intra_op_parallelism_threads()
+        inter_threads = tf.config.threading.get_inter_op_parallelism_threads()
+        self._log(
+            f"Hardware: {self.hardware_info.device} | GPUs={self.hardware_info.gpu_count} | "
+            f"CPU threads(intra/inter)={intra_threads}/{inter_threads} | "
+            f"CPU limite={self.config.ram_limit_pct}% | mixed_precision=False | xla=False | "
+            f"RAM limite {self.hardware_info.ram_limit_gb:.2f} GB"
+        )
+        if os.name == "nt" and self.hardware_info.gpu_count == 0:
+            self._log(
+                "GPU TensorFlow indisponivel no Windows nativo para TF>=2.11. "
+                "Use WSL2 (CUDA) ou tensorflow-directml para habilitar GPU."
+            )
+            self._log("Backend GPU recomendado: use-wsl2-or-tensorflow-directml")
         self._log(
             f"Pipeline: treino={self.config.training_image} | classif={self.config.classification_image} | "
             f"saida={self.config.output_path}"
@@ -488,6 +503,7 @@ class ClassifierPipeline:
             alpha_threshold=self.config.alpha_threshold,
             ram_limit_bytes=self.hardware_info.ram_limit_bytes,
             progress_callback=self._progress,
+            logger=self._log,
         )
         output_path = predictor.predict(
             self.config.classification_image,

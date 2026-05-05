@@ -388,6 +388,12 @@ class MainController:
         elif lower.startswith("epoch "):
             color = "#7EE787"
             weight = "500"
+        elif lower.startswith("rasterpredictor:"):
+            color = "#56D4DD"
+            weight = "600"
+        elif lower.startswith("chunk "):
+            color = "#F2CC60"
+            weight = "500"
         elif "salvando modelo" in lower or "info de execucao salva" in lower:
             color = "#CFA8FF"
             weight = "500"
