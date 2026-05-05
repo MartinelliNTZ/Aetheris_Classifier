@@ -12,7 +12,7 @@ from PySide6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
     QLabel, QLineEdit, QPushButton, QSpinBox, QDoubleSpinBox, QComboBox,
     QCheckBox, QTableWidget, QTableWidgetItem, QHeaderView, QFileDialog,
-    QGroupBox, QSplitter, QTextEdit, QProgressBar, QFrame, QSizePolicy,
+    QGroupBox, QSplitter, QTextEdit, QTextBrowser, QProgressBar, QFrame, QSizePolicy,
     QScrollArea
 )
 from PySide6.QtCore import Qt, QPoint
@@ -47,10 +47,11 @@ class Separator(QFrame):
 class PathBrowseRow(QWidget):
     """Linha com label, campo de texto e botao browse."""
     def __init__(self, label_text: str, default_path: str = "", file_mode=True,
-                 file_filter="Todos (*.*)", parent=None):
+                 file_filter="Todos (*.*)", browse_mode: str = "open_file", parent=None):
         super().__init__(parent)
         self.file_mode = file_mode
         self.file_filter = file_filter
+        self.browse_mode = browse_mode
 
         layout = QHBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
@@ -76,7 +77,13 @@ class PathBrowseRow(QWidget):
         layout.addWidget(self.btn)
 
     def _browse(self):
-        if self.file_mode:
+        if self.browse_mode == "save_file":
+            path, _ = QFileDialog.getSaveFileName(
+                self, "Salvar arquivo", self.edit.text().strip() or "", self.file_filter
+            )
+        elif self.browse_mode == "directory":
+            path = QFileDialog.getExistingDirectory(self, "Selecionar pasta")
+        elif self.file_mode:
             path, _ = QFileDialog.getOpenFileName(
                 self, "Selecionar arquivo", "", self.file_filter
             )
@@ -217,7 +224,7 @@ class MainWindow(QMainWindow):
         )
         self.row_img_saida = PathBrowseRow(
             "Saida GeoTIFF", "resultado/mapa_classificado_ui.tif",
-            file_filter="GeoTIFF (*.tif *.tiff)"
+            file_filter="GeoTIFF (*.tif *.tiff)", browse_mode="save_file"
         )
 
         lay_img.addWidget(self.row_img_treino)
@@ -469,8 +476,10 @@ class MainWindow(QMainWindow):
 
         grp_log = QGroupBox("Console de Execucao")
         lay_log = QVBoxLayout(grp_log)
-        self.txt_log = QTextEdit()
+        self.txt_log = QTextBrowser()
         self.txt_log.setReadOnly(True)
+        self.txt_log.setOpenLinks(False)
+        self.txt_log.setOpenExternalLinks(False)
         self.txt_log.setPlaceholderText("Aguardando inicio do pipeline...")
         lay_log.addWidget(self.txt_log)
         right_layout.addWidget(grp_log, 1)

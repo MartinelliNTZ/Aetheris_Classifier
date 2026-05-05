@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 import json
 from dataclasses import dataclass, field
@@ -70,7 +70,7 @@ class PipelineConfig:
                     class_id = item[1]
                     legend = item[2] if len(item) > 2 else ""
                 else:
-                    raise PipelineConfigError("Formato de shapefile inválido")
+                    raise PipelineConfigError("Formato de shapefile invÃ¡lido")
                 shapefiles.append(ShapefileEntry(Path(path), int(class_id), str(legend)))
 
             hidden_layers = data.get("hidden_layers", data.get("camadas", []))
@@ -107,34 +107,39 @@ class PipelineConfig:
                 ram_limit_pct=int(data.get("ram_limit_pct", data.get("spin_ram", 70))),
             )
         except KeyError as exc:
-            raise PipelineConfigError(f"Chave obrigatória ausente: {exc}") from exc
+            raise PipelineConfigError(f"Chave obrigatÃ³ria ausente: {exc}") from exc
         except ValueError as exc:
-            raise PipelineConfigError(f"Valor inválido na configuração: {exc}") from exc
+            raise PipelineConfigError(f"Valor invÃ¡lido na configuraÃ§Ã£o: {exc}") from exc
 
     def validate(self) -> None:
         if self.model_action not in self.VALID_ACTIONS:
-            raise PipelineConfigError(f"Ação de modelo inválida: {self.model_action}")
+            raise PipelineConfigError(f"Acao de modelo invalida: {self.model_action}")
 
-        if not self.training_image.is_file():
-            raise PipelineConfigError(f"Imagem de treino não encontrada: {self.training_image}")
         if not self.classification_image.is_file():
-            raise PipelineConfigError(f"Imagem de classificação não encontrada: {self.classification_image}")
+            raise PipelineConfigError(f"Imagem de classificacao nao encontrada: {self.classification_image}")
+        if self.model_action != "Usar modelo existente" and not self.training_image.is_file():
+            raise PipelineConfigError(f"Imagem de treino nao encontrada: {self.training_image}")
 
-        if not self.shapefiles:
-            raise PipelineConfigError("Nenhum shapefile de treino foi fornecido")
+        if self.model_action != "Usar modelo existente":
+            if not self.shapefiles:
+                raise PipelineConfigError("Nenhum shapefile de treino foi fornecido")
 
-        duplicates = [class_id for class_id in {entry.class_id for entry in self.shapefiles} if [e for e in self.shapefiles if e.class_id == class_id].__len__() > 1]
-        if duplicates:
-            raise PipelineConfigError(f"IDs de classe duplicados nos shapefiles: {duplicates}")
+            duplicates = [
+                class_id
+                for class_id in {entry.class_id for entry in self.shapefiles}
+                if len([e for e in self.shapefiles if e.class_id == class_id]) > 1
+            ]
+            if duplicates:
+                raise PipelineConfigError(f"IDs de classe duplicados nos shapefiles: {duplicates}")
 
-        for entry in self.shapefiles:
-            if not entry.path.is_file():
-                raise PipelineConfigError(f"Shapefile não encontrado: {entry.path}")
+            for entry in self.shapefiles:
+                if not entry.path.is_file():
+                    raise PipelineConfigError(f"Shapefile nao encontrado: {entry.path}")
 
         if self.model_action != "Treinar modelo novo" and self.existing_model_path is None:
-            raise PipelineConfigError("Modelo existente deve ser informado para a ação escolhida")
+            raise PipelineConfigError("Modelo existente deve ser informado para a acao escolhida")
         if self.existing_model_path is not None and not self.existing_model_path.is_file():
-            raise PipelineConfigError(f"Modelo existente não encontrado: {self.existing_model_path}")
+            raise PipelineConfigError(f"Modelo existente nao encontrado: {self.existing_model_path}")
 
         if self.save_model and not self.model_path:
             raise PipelineConfigError("Caminho de salvamento do modelo deve ser informado")
@@ -146,7 +151,7 @@ class PipelineConfig:
             raise PipelineConfigError("dropout_rate deve estar entre 0 e 1")
 
         if self.activation not in self.VALID_ACTIVATIONS:
-            raise PipelineConfigError(f"Ativação inválida: {self.activation}")
+            raise PipelineConfigError(f"Ativacao invalida: {self.activation}")
 
         if self.ram_limit_pct < 1 or self.ram_limit_pct > 100:
             raise PipelineConfigError("ram_limit_pct deve estar entre 1 e 100")
@@ -187,7 +192,8 @@ class PipelineConfig:
     def load(cls, path: Path) -> "PipelineConfig":
         path = Path(path)
         if not path.is_file():
-            raise PipelineConfigError(f"Arquivo de configuração não encontrado: {path}")
+            raise PipelineConfigError(f"Arquivo de configuraÃ§Ã£o nÃ£o encontrado: {path}")
         with path.open("r", encoding="utf-8") as handle:
             data = json.load(handle)
         return cls.from_dict(data)
+

@@ -28,7 +28,7 @@ from .trainer import Trainer
 @dataclass(frozen=True)
 class PipelineResult:
     hardware_info: object
-    evaluation: EvaluationResult
+    evaluation: Optional[EvaluationResult]
     output_path: Path
     model_path: Optional[Path]
     info_path: Optional[Path]
@@ -144,7 +144,7 @@ class ClassifierPipeline:
         self,
         report_path: Path,
         assets_folder_name: str,
-        evaluation: EvaluationResult,
+        evaluation: Optional[EvaluationResult],
         output_path: Path,
         execution_info_path: Optional[Path],
         train_info: Dict[str, object],
@@ -166,23 +166,25 @@ class ClassifierPipeline:
             )
 
         class_rows = []
-        for class_name in self.class_names:
-            row = evaluation.report.get(class_name, {})
-            if not row:
-                continue
-            class_rows.append(
-                "<tr>"
-                f"<td>{class_name}</td>"
-                f"<td>{float(row.get('precision', 0.0)):.4f}</td>"
-                f"<td>{float(row.get('recall', 0.0)):.4f}</td>"
-                f"<td>{float(row.get('f1-score', 0.0)):.4f}</td>"
-                f"<td>{int(row.get('support', 0))}</td>"
-                "</tr>"
-            )
+        if evaluation is not None:
+            for class_name in self.class_names:
+                row = evaluation.report.get(class_name, {})
+                if not row:
+                    continue
+                class_rows.append(
+                    "<tr>"
+                    f"<td>{class_name}</td>"
+                    f"<td>{float(row.get('precision', 0.0)):.4f}</td>"
+                    f"<td>{float(row.get('recall', 0.0)):.4f}</td>"
+                    f"<td>{float(row.get('f1-score', 0.0)):.4f}</td>"
+                    f"<td>{int(row.get('support', 0))}</td>"
+                    "</tr>"
+                )
         class_table_html = "\n".join(class_rows) if class_rows else "<tr><td colspan='5'>Sem dados</td></tr>"
 
-        train_pixels = int(train_info.get("width", 0)) * int(train_info.get("height", 0))
+        train_pixels = int(train_info.get("width", 0)) * int(train_info.get("height", 0)) if train_info else 0
         class_pixels = int(class_info.get("width", 0)) * int(class_info.get("height", 0))
+        accuracy_text = f"{evaluation.accuracy:.4f} ({evaluation.accuracy * 100:.2f}%)" if evaluation is not None else "Nao avaliado (modo uso de modelo existente)"
 
         shp_items = []
         for shp in shapefiles_info:
@@ -217,7 +219,7 @@ class ClassifierPipeline:
     <p><b>Inicio:</b> {started_at.strftime("%Y-%m-%d %H:%M:%S")}</p>
     <p><b>Fim:</b> {finished_at.strftime("%Y-%m-%d %H:%M:%S")}</p>
     <p><b>Tempo total:</b> {duration_hms} ({duration_seconds:.2f}s)</p>
-    <p><b>Acuracia:</b> {evaluation.accuracy:.4f} ({evaluation.accuracy * 100:.2f}%)</p>
+    <p><b>Acuracia:</b> {accuracy_text}</p>
   </div>
   <div class="card">
     <h2>Hardware e Pipeline</h2>
@@ -235,13 +237,13 @@ class ClassifierPipeline:
       <li>Saida classificada (TIF): {output_path}</li>
       <li>Modelo: {model_path if model_path else "Nao aplicavel"}</li>
       <li>Info JSON: {assets_folder_name}/{Path(str(execution_info_path)).name if execution_info_path else "Nao gerado"}</li>
-      <li>Relatorio metricas TXT: {assets_folder_name}/{evaluation.report_path.name}</li>
+      <li>Relatorio metricas TXT: {assets_folder_name}/{evaluation.report_path.name if evaluation is not None else "Nao gerado"}</li>
     </ul>
   </div>
   <div class="card">
     <h2>Validacao das Imagens</h2>
-    <p><b>Treino:</b> {Path(str(train_info.get("path", "-"))).name} | {train_info.get("width", 0)} x {train_info.get("height", 0)} px | bandas: {train_info.get("bands", 0)} | pixels: {train_pixels:,}</p>
-    <p><b>CRS treino:</b> {train_info.get("crs", "-")}</p>
+    <p><b>Treino:</b> {Path(str(train_info.get("path", "-"))).name if train_info else "Nao utilizado"} | {train_info.get("width", 0) if train_info else 0} x {train_info.get("height", 0) if train_info else 0} px | bandas: {train_info.get("bands", 0) if train_info else 0} | pixels: {train_pixels:,}</p>
+    <p><b>CRS treino:</b> {train_info.get("crs", "-") if train_info else "-"}</p>
     <p><b>Classificacao:</b> {Path(str(class_info.get("path", "-"))).name} | {class_info.get("width", 0)} x {class_info.get("height", 0)} px | bandas: {class_info.get("bands", 0)} | pixels: {class_pixels:,}</p>
     <p><b>CRS classificacao:</b> {class_info.get("crs", "-")}</p>
   </div>
@@ -260,8 +262,8 @@ class ClassifierPipeline:
   </div>
   <div class="card">
     <h2>Graficos de Avaliacao</h2>
-    {_img_tag(evaluation.confusion_matrix_path, "Matriz de Confusao")}
-    {_img_tag(evaluation.plot_loss_path, "Curvas de Loss e Accuracy")}
+    {_img_tag(evaluation.confusion_matrix_path, "Matriz de Confusao") if evaluation is not None else "<p class='muted'>Nao gerado no modo de uso de modelo existente.</p>"}
+    {_img_tag(evaluation.plot_loss_path, "Curvas de Loss e Accuracy") if evaluation is not None else ""}
   </div>
 </body>
 </html>
@@ -305,7 +307,7 @@ class ClassifierPipeline:
     def _save_execution_info(
         self,
         info_path: Path,
-        train_raster: RasterSource,
+        train_raster: Optional[RasterSource],
         class_raster: RasterSource,
         n_bands_feature: int,
     ) -> None:
@@ -324,9 +326,9 @@ class ClassifierPipeline:
                 "bands_used": n_bands_feature,
                 "class_names": self.class_names,
             },
-            "raster_training": self._collect_raster_info(train_raster),
+            "raster_training": self._collect_raster_info(train_raster) if train_raster else None,
             "raster_classification": self._collect_raster_info(class_raster),
-            "shapefiles": self._collect_shapefiles_info(),
+            "shapefiles": self._collect_shapefiles_info() if self.config.model_action != "Usar modelo existente" else [],
         }
         info_path.parent.mkdir(parents=True, exist_ok=True)
         with info_path.open("w", encoding="utf-8") as handle:
@@ -343,6 +345,21 @@ class ClassifierPipeline:
             raise ValueError("Modelo existente nao informado")
         self._log(f"Carregando modelo existente: {self.config.existing_model_path}")
         return load_model(str(self.config.existing_model_path))
+
+    def _load_existing_model_info(self) -> Dict[str, object]:
+        if not self.config.existing_model_path:
+            return {}
+        info_path = self.config.existing_model_path.with_suffix(".info.json")
+        if not info_path.is_file():
+            return {}
+        try:
+            with info_path.open("r", encoding="utf-8") as handle:
+                data = json.load(handle)
+            if isinstance(data, dict):
+                return data
+        except Exception:
+            return {}
+        return {}
 
     def _validate_model_compatibility(self, n_bands_feature: int) -> None:
         if self.model is None:
@@ -411,43 +428,79 @@ class ClassifierPipeline:
         )
         artifact_paths = self._build_artifact_paths()
 
-        train_raster = RasterSource(self.config.training_image)
         class_raster = RasterSource(self.config.classification_image)
-        train_raster.validate()
         class_raster.validate()
-        train_info = self._collect_raster_info(train_raster)
+        train_info: Dict[str, object] = {}
+        if self.config.model_action != "Usar modelo existente":
+            train_raster = RasterSource(self.config.training_image)
+            train_raster.validate()
+            train_info = self._collect_raster_info(train_raster)
         class_info = self._collect_raster_info(class_raster)
-        self._log(
-            "Validacao imagens: "
-            f"Treino {train_info['width']}x{train_info['height']} ({int(train_info['width']) * int(train_info['height']):,} px) | "
-            f"Classif {class_info['width']}x{class_info['height']} ({int(class_info['width']) * int(class_info['height']):,} px)"
-        )
+        if self.config.model_action == "Usar modelo existente":
+            self._log(
+                "Validacao imagens: "
+                f"Classif {class_info['width']}x{class_info['height']} ({int(class_info['width']) * int(class_info['height']):,} px)"
+            )
+        else:
+            self._log(
+                "Validacao imagens: "
+                f"Treino {train_info['width']}x{train_info['height']} ({int(train_info['width']) * int(train_info['height']):,} px) | "
+                f"Classif {class_info['width']}x{class_info['height']} ({int(class_info['width']) * int(class_info['height']):,} px)"
+            )
 
-        self._log("Carregando shapefiles de amostra")
-        shapefile_dataset = ShapefileDataset(self.config.shapefiles)
-        sample_gdf = shapefile_dataset.load(train_raster.crs)
-        self.class_names = [
-            shapefile_dataset.get_class_names().get(cls, f"Classe {cls}")
-            for cls in sorted({entry.class_id for entry in self.config.shapefiles})
-        ]
-
-        self._log("Extraindo valores espectrais")
-        X, Y, n_bands_feature = FeatureExtractor.extract(
-            train_raster,
-            sample_gdf,
-            use_mask=self.config.use_mask,
-            alpha_threshold=self.config.alpha_threshold,
-        )
-
-        split = DatasetSplitter.split(
-            X,
-            Y,
-            test_size=self.config.test_size,
-            random_state=self.config.random_state,
-        )
+        split = None
+        evaluation = None
+        shapefiles_info: List[Dict[str, object]] = []
+        n_bands_feature = 0
 
         self._log("Preparando o modelo")
-        if self.config.model_action == "Treinar modelo novo":
+        if self.config.model_action == "Usar modelo existente":
+            self.model = self._load_existing_model()
+            model_info = self._load_existing_model_info()
+            info_features = model_info.get("features", {}) if isinstance(model_info, dict) else {}
+            n_bands_feature = int(info_features.get("bands_used", 0) or 0)
+            if n_bands_feature <= 0:
+                model_input_shape = getattr(self.model, "input_shape", None)
+                if not model_input_shape or len(model_input_shape) < 2:
+                    raise ValueError("Nao foi possivel obter o numero de bandas do modelo existente")
+                n_bands_feature = int(model_input_shape[-1])
+
+            info_class_names = info_features.get("class_names", []) if isinstance(info_features, dict) else []
+            if isinstance(info_class_names, list) and info_class_names:
+                self.class_names = [str(v) for v in info_class_names]
+            else:
+                model_output_shape = getattr(self.model, "output_shape", None)
+                units = int(model_output_shape[-1]) if model_output_shape and len(model_output_shape) >= 2 else 1
+                if units <= 1:
+                    self.class_names = ["Classe 0", "Classe 1"]
+                else:
+                    self.class_names = [f"Classe {idx}" for idx in range(units)]
+            self._log(
+                f"Modelo existente pronto para classificacao | bandas={n_bands_feature} | classes={len(self.class_names)}"
+            )
+        elif self.config.model_action == "Treinar modelo novo":
+            self._log("Carregando shapefiles de amostra")
+            shapefile_dataset = ShapefileDataset(self.config.shapefiles)
+            sample_gdf = shapefile_dataset.load(train_raster.crs)
+            self.class_names = [
+                shapefile_dataset.get_class_names().get(cls, f"Classe {cls}")
+                for cls in sorted({entry.class_id for entry in self.config.shapefiles})
+            ]
+
+            self._log("Extraindo valores espectrais")
+            X, Y, n_bands_feature = FeatureExtractor.extract(
+                train_raster,
+                sample_gdf,
+                use_mask=self.config.use_mask,
+                alpha_threshold=self.config.alpha_threshold,
+            )
+
+            split = DatasetSplitter.split(
+                X,
+                Y,
+                test_size=self.config.test_size,
+                random_state=self.config.random_state,
+            )
             self.model = ModelFactory.build(
                 input_shape=(split.X_train.shape[1],),
                 num_classes=len(self.class_names),
@@ -456,6 +509,26 @@ class ClassifierPipeline:
                 dropout_rate=self.config.dropout_rate,
             )
         else:
+            self._log("Carregando shapefiles de amostra")
+            shapefile_dataset = ShapefileDataset(self.config.shapefiles)
+            sample_gdf = shapefile_dataset.load(train_raster.crs)
+            self.class_names = [
+                shapefile_dataset.get_class_names().get(cls, f"Classe {cls}")
+                for cls in sorted({entry.class_id for entry in self.config.shapefiles})
+            ]
+            self._log("Extraindo valores espectrais")
+            X, Y, n_bands_feature = FeatureExtractor.extract(
+                train_raster,
+                sample_gdf,
+                use_mask=self.config.use_mask,
+                alpha_threshold=self.config.alpha_threshold,
+            )
+            split = DatasetSplitter.split(
+                X,
+                Y,
+                test_size=self.config.test_size,
+                random_state=self.config.random_state,
+            )
             self.model = self._load_existing_model()
             self._validate_model_compatibility(n_bands_feature)
             self._log("Modelo existente validado com sucesso")
@@ -475,26 +548,26 @@ class ClassifierPipeline:
                 self._log(f"Salvando modelo em {artifact_paths['model']}")
                 Trainer.save_model(self.model, artifact_paths["model"])
                 self._last_saved_model_path = artifact_paths["model"]
+            shapefiles_info = self._collect_shapefiles_info()
 
         self._save_execution_info(
             info_path=artifact_paths["info"],
-            train_raster=train_raster,
+            train_raster=train_raster if self.config.model_action != "Usar modelo existente" else None,
             class_raster=class_raster,
             n_bands_feature=n_bands_feature,
         )
         self._last_saved_info_path = artifact_paths["info"]
         self._log(f"Info de execucao salva em {artifact_paths['info']}")
-        shapefiles_info = self._collect_shapefiles_info()
-
-        self._log("Avaliando modelo")
-        evaluation = Evaluator.evaluate(
-            self.model,
-            split.X_test,
-            split.Y_test,
-            class_names=self.class_names,
-            output_dir=self._report_dir,
-            history=self.history,
-        )
+        if self.config.model_action != "Usar modelo existente":
+            self._log("Avaliando modelo")
+            evaluation = Evaluator.evaluate(
+                self.model,
+                split.X_test,
+                split.Y_test,
+                class_names=self.class_names,
+                output_dir=self._report_dir,
+                history=self.history,
+            )
 
         self._log("Classificando imagem completa")
         predictor = RasterPredictor(

@@ -19,6 +19,7 @@ from datetime import datetime, timedelta
 from time import perf_counter
 
 from PySide6.QtCore import Qt, QThread, Signal, QTimer
+from PySide6.QtGui import QDesktopServices
 from PySide6.QtWidgets import QTableWidgetItem, QLineEdit, QSpinBox, QPushButton, QFileDialog, QInputDialog, QMessageBox
 
 from core.Preferences import Preferences
@@ -71,6 +72,8 @@ class MainController:
         self._progress_timer = QTimer()
         self._progress_timer.setInterval(500)
         self._progress_timer.timeout.connect(self._refresh_time_based_progress)
+        self._last_output_tif_path: Path | None = None
+        self._last_report_html_path: Path | None = None
 
         self._connect_signals()
         self._init_defaults()
@@ -85,6 +88,7 @@ class MainController:
         self.view.btn_add_shp.clicked.connect(self._on_add_shp)
         self.view.combo_model_action.currentTextChanged.connect(self._on_model_action_changed)
         self.view.btn_listar_modelos.clicked.connect(self._on_listar_modelos)
+        self.view.txt_log.anchorClicked.connect(self._on_log_link_clicked)
 
         widgets_bind = [
             self.view.row_img_treino.edit,
@@ -356,6 +360,10 @@ class MainController:
     def _append_log(self, message: str) -> None:
         text = str(message)
         lower = text.lower()
+        report_prefix = "report html salvo em "
+
+        if lower.startswith(report_prefix):
+            self._last_report_html_path = Path(text[len(report_prefix):].strip())
 
         if "treinando modelo" in lower:
             self._last_progress_message = "Treinando"
@@ -460,6 +468,7 @@ class MainController:
     def _on_pipeline_finished(self, message: str) -> None:
         self._finalize_run_metrics(success=True)
         self._append_log(f"> {message}")
+        self._append_output_links()
         self._set_running_state(False)
         self.view.progress.setValue(100)
         self.view.progress.setFormat(" 100% - concluido ")
@@ -570,6 +579,8 @@ class MainController:
         return pixels, gb
 
     def _prepare_run_metrics(self, config: PipelineConfig) -> None:
+        self._last_output_tif_path = Path(config.output_path)
+        self._last_report_html_path = None
         train_pixels, train_gb = self._get_raster_pixels_and_gb(config.training_image)
         class_pixels, class_gb = self._get_raster_pixels_and_gb(config.classification_image)
         if config.model_action == "Usar modelo existente":
@@ -653,6 +664,40 @@ class MainController:
         self._run_metrics = {}
         self._eta_target = None
         self._run_estimated_seconds = 0.0
+
+    @staticmethod
+    def _to_file_url(path: Path) -> str:
+        return path.resolve().as_uri()
+
+    def _append_output_links(self) -> None:
+        output_path = self._last_output_tif_path
+        report_path = self._last_report_html_path
+
+        if not output_path and not report_path:
+            return
+
+        lines = [
+            "<span style='color:#8EC5FF; font-family:Consolas, \"Courier New\", monospace; font-size:12px; font-weight:600;'>> Atalhos de saida</span>"
+        ]
+        if output_path:
+            output_folder = output_path.resolve().parent
+            lines.append(
+                "<span style='color:#CFCFCF; font-family:Consolas, \"Courier New\", monospace; font-size:12px;'>"
+                f"Pasta do TIFF classificado: <a href='{self._to_file_url(output_folder)}' style='color:#56D4DD;'>abrir pasta</a>"
+                "</span>"
+            )
+        if report_path:
+            lines.append(
+                "<span style='color:#CFCFCF; font-family:Consolas, \"Courier New\", monospace; font-size:12px;'>"
+                f"Report HTML: <a href='{self._to_file_url(report_path)}' style='color:#56D4DD;'>abrir report</a>"
+                "</span>"
+            )
+
+        self.view.txt_log.append("<br/>".join(lines))
+
+    def _on_log_link_clicked(self, url) -> None:
+        if not QDesktopServices.openUrl(url):
+            self._append_log(f"> ERRO: nao foi possivel abrir o link: {url.toString()}")
 
     def get_shapefile_entries(self):
         entries = []
