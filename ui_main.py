@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-UI Profissional Dark Charcoal — Classificador Raster Neural v6
+UI Profissional Dark Charcoal — Aetheris Classifier v6
 ===============================================================
 Interface premium em PySide6 para o pipeline main6_multcore.py.
 Apenas UI (frontend); a lógica de execucao sera integrada posteriormente.
@@ -16,7 +16,7 @@ from PySide6.QtWidgets import (
     QScrollArea
 )
 from PySide6.QtCore import Qt, QPoint
-from PySide6.QtGui import QFont
+from PySide6.QtGui import QFont, QIcon
 from core.dark_charcoal_style import DarkCharcoalStyle
 from core.hud_loader import HudCircularRingsLoader
 from core.main_controller import MainController
@@ -96,9 +96,10 @@ class PathBrowseRow(QWidget):
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("Classificador Raster Neural — v6 Premium")
+        self.setWindowTitle("Aetheris Classifier v6 Premium")
         self.setWindowFlags(Qt.WindowType.FramelessWindowHint | Qt.WindowType.Window)
         self.setMinimumSize(1280, 860)
+        self.setWindowIcon(QIcon("Aetheris.png"))
         self.resize(1440, 900)
         self._drag_active = False
         self._drag_offset = QPoint()
@@ -161,8 +162,8 @@ class MainWindow(QMainWindow):
         title_col = QVBoxLayout()
         title_col.setSpacing(4)
 
-        #self.lbl_title = QLabel("Classificador Raster Neural")
-        #self.lbl_title.setObjectName("header_title")
+        self.lbl_title = QLabel("Aetheris Classifier")
+        self.lbl_title.setObjectName("header_title")
 
         self.lbl_subtitle = QLabel(
             "Pipeline de classificacao supervisionada com redes neurais profundas "
@@ -171,7 +172,7 @@ class MainWindow(QMainWindow):
         self.lbl_subtitle.setObjectName("header_subtitle")
         self.lbl_subtitle.setWordWrap(True)
 
-       # title_col.addWidget(self.lbl_title)
+        title_col.addWidget(self.lbl_title)
         title_col.addWidget(self.lbl_subtitle)
 
         header_layout.addLayout(title_col, 1)
