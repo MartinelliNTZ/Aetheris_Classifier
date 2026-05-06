@@ -211,7 +211,7 @@ class MainWindow(QMainWindow):
         left_layout.setSpacing(6)
 
         # Grupo: Imagens
-        grp_imagens = QGroupBox("Imagens & Saida")
+        grp_imagens = QGroupBox("Imagens e Saida")
         lay_img = QVBoxLayout(grp_imagens)
         lay_img.setSpacing(8)
 
@@ -235,7 +235,7 @@ class MainWindow(QMainWindow):
         left_layout.addWidget(grp_imagens)
 
         # Grupo: Amostras
-        grp_amostras = QGroupBox("Amostras â€” Shapefiles por Classe")
+        grp_amostras = QGroupBox("Amostras de Shapefiles por Classe")
         lay_amostras = QVBoxLayout(grp_amostras)
         lay_amostras.setSpacing(8)
 
@@ -358,7 +358,7 @@ class MainWindow(QMainWindow):
         left_layout.addWidget(grp_treino)
 
         # Grupo: Hardware & Mascara
-        grp_hw = QGroupBox("Hardware & Pre-processamento")
+        grp_hw = QGroupBox("Hardware e Pre-processamento")
         lay_hw = QVBoxLayout(grp_hw)
         lay_hw.setSpacing(8)
 
