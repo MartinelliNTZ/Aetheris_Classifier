@@ -138,7 +138,7 @@ QLineEdit {{
     background-color: {c.INPUT_BG};
     border: 1px solid {c.BORDER};
     border-radius: 6px;
-    padding: 4px 7px;
+    padding: 2px 2px;
     color: {c.TEXT_PRIMARY};
     selection-background-color: {c.ACCENT_GOLD};
     selection-color: {c.DARK_BG};
