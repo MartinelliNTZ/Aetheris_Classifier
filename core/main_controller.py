@@ -375,42 +375,61 @@ class MainController:
             self._last_progress_message = "Classificando"
             self._refresh_time_based_progress()
 
-        self.view.txt_log.append(self._format_log_html(text))
+        timestamp = datetime.now().strftime("%H:%M:%S")
+        self.view.txt_log.append(self._format_log_html(text, timestamp))
 
-    def _format_log_html(self, text: str) -> str:
+    def _format_log_html(self, text: str, timestamp: str = "") -> str:
         safe = html.escape(text)
         lower = text.lower()
 
         color = "#CFCFCF"  # default
         weight = "400"
+        ts_color = "#606060"
 
         if text.startswith("> ETA estimado:"):
             color = "#D4A853"
             weight = "700"
+            ts_color = "#8A6E2F"
         elif text.startswith("> ERRO:"):
             color = "#FF6B6B"
             weight = "700"
+            ts_color = "#CC4444"
         elif text.startswith(">"):
             color = "#8EC5FF"
             weight = "600"
+            ts_color = "#5A8DBF"
         elif "treinando modelo" in lower or "classificando imagem completa" in lower:
             color = "#D4A853"
             weight = "700"
+            ts_color = "#8A6E2F"
         elif lower.startswith("epoch "):
             color = "#7EE787"
             weight = "500"
+            ts_color = "#4A8F50"
         elif lower.startswith("rasterpredictor:"):
             color = "#56D4DD"
             weight = "600"
+            ts_color = "#3A9AA0"
         elif lower.startswith("chunk "):
             color = "#F2CC60"
             weight = "500"
+            ts_color = "#A88B30"
         elif "salvando modelo" in lower or "info de execucao salva" in lower:
             color = "#CFA8FF"
             weight = "500"
+            ts_color = "#8A6BBF"
         elif "hardware:" in lower or "avaliando modelo" in lower:
             color = "#56D4DD"
             weight = "500"
+            ts_color = "#3A9AA0"
+
+        if timestamp:
+            return (
+                f"<span style='color:{ts_color}; font-family:Consolas, \"Courier New\", monospace; "
+                f"font-size:11px; font-weight:500;'>[{timestamp}]</span> "
+                f"<span style='color:{color}; font-family:Consolas, \"Courier New\", monospace; "
+                f"font-size:12px; font-weight:{weight};'>{safe}</span>"
+            )
 
         return (
             f"<span style='color:{color}; font-family:Consolas, \"Courier New\", monospace; "
@@ -585,16 +604,25 @@ class MainController:
             gb = 0.0
         return pixels, gb
 
+    @staticmethod
+    def _count_classes(config: PipelineConfig) -> int:
+        """Retorna o numero de classes distintas nos shapefiles."""
+        unique_classes = set()
+        for entry in config.shapefiles:
+            unique_classes.add(entry.class_id)
+        return max(len(unique_classes), 1)
+
     def _prepare_run_metrics(self, config: PipelineConfig) -> None:
         self._last_output_tif_path = Path(config.output_path)
         self._last_report_html_path = None
+        self._run_num_classes = self._count_classes(config)
         train_pixels, train_gb = self._get_raster_pixels_and_gb(config.training_image)
         class_pixels, class_gb = self._get_raster_pixels_and_gb(config.classification_image)
         if config.model_action == "Usar modelo existente":
             train_pixels = 0.0
             train_gb = 0.0
-        train_rate = self._avg_px_per_sec("train")
-        class_rate = self._avg_px_per_sec("class")
+        train_rate = self._avg_px_per_sec("train", self._run_num_classes)
+        class_rate = self._avg_px_per_sec("class", self._run_num_classes)
         est_seconds = (train_pixels / train_rate) + (class_pixels / class_rate)
         self._run_estimated_seconds = max(est_seconds, 1.0)
         self._eta_target = datetime.now() + timedelta(seconds=max(est_seconds, 0.0))
@@ -604,11 +632,13 @@ class MainController:
             "train_gb": train_gb,
             "class_pixels": class_pixels,
             "class_gb": class_gb,
+            "num_classes": self._run_num_classes,
         }
 
-    def _avg_px_per_sec(self, prefix: str) -> float:
-        total_pixels = float(self.preferences.get(f"{prefix}_total_pixels", 1000.0))
-        total_seconds = float(self.preferences.get(f"{prefix}_total_seconds", 1.0))
+    def _avg_px_per_sec(self, prefix: str, num_classes: int = 2) -> float:
+        suffix = f"_{num_classes}class"
+        total_pixels = float(self.preferences.get(f"{prefix}_total_pixels{suffix}", 1000.0))
+        total_seconds = float(self.preferences.get(f"{prefix}_total_seconds{suffix}", 1.0))
         if total_seconds <= 0:
             total_seconds = 1.0
         if total_pixels <= 0:
@@ -616,10 +646,11 @@ class MainController:
         return total_pixels / total_seconds
 
     def _log_eta_estimado(self) -> None:
-        train_rate = self._avg_px_per_sec("train")
-        class_rate = self._avg_px_per_sec("class")
+        train_rate = self._avg_px_per_sec("train", self._run_num_classes)
+        class_rate = self._avg_px_per_sec("class", self._run_num_classes)
         self._append_log(
             f"> ETA estimado: {self._eta_target.strftime('%H:%M:%S') if self._eta_target else '--:--:--'} | "
+            f"{self._run_num_classes} classes | "
             f"Treino={train_rate:.2f} px/s | Classificacao={class_rate:.2f} px/s"
         )
 
@@ -648,21 +679,23 @@ class MainController:
         class_pixels = float(self._run_metrics.get("class_pixels", 0.0))
         train_gb = float(self._run_metrics.get("train_gb", 0.0))
         class_gb = float(self._run_metrics.get("class_gb", 0.0))
+        num_classes = int(self._run_metrics.get("num_classes", 2))
+        suffix = f"_{num_classes}class"
 
         train_seconds = elapsed * (train_pixels / (train_pixels + class_pixels)) if (train_pixels + class_pixels) > 0 else 0.0
         class_seconds = max(elapsed - train_seconds, 0.0)
 
-        self.preferences.set("train_total_pixels", float(self.preferences.get("train_total_pixels", 1000.0)) + train_pixels)
-        self.preferences.set("train_total_gb", float(self.preferences.get("train_total_gb", 0.0)) + train_gb)
-        self.preferences.set("train_total_seconds", float(self.preferences.get("train_total_seconds", 1.0)) + train_seconds)
+        self.preferences.set(f"train_total_pixels{suffix}", float(self.preferences.get(f"train_total_pixels{suffix}", 1000.0)) + train_pixels)
+        self.preferences.set(f"train_total_gb{suffix}", float(self.preferences.get(f"train_total_gb{suffix}", 0.0)) + train_gb)
+        self.preferences.set(f"train_total_seconds{suffix}", float(self.preferences.get(f"train_total_seconds{suffix}", 1.0)) + train_seconds)
 
-        self.preferences.set("class_total_pixels", float(self.preferences.get("class_total_pixels", 1000.0)) + class_pixels)
-        self.preferences.set("class_total_gb", float(self.preferences.get("class_total_gb", 0.0)) + class_gb)
-        self.preferences.set("class_total_seconds", float(self.preferences.get("class_total_seconds", 1.0)) + class_seconds)
+        self.preferences.set(f"class_total_pixels{suffix}", float(self.preferences.get(f"class_total_pixels{suffix}", 1000.0)) + class_pixels)
+        self.preferences.set(f"class_total_gb{suffix}", float(self.preferences.get(f"class_total_gb{suffix}", 0.0)) + class_gb)
+        self.preferences.set(f"class_total_seconds{suffix}", float(self.preferences.get(f"class_total_seconds{suffix}", 1.0)) + class_seconds)
 
         self.savepreferences()
         self._append_log(
-            f"> Estatisticas acumuladas atualizadas | "
+            f"> Estatisticas acumuladas atualizadas ({num_classes} classes) | "
             f"Treino: {train_pixels:.0f}px, {train_gb:.3f}GB | "
             f"Classificacao: {class_pixels:.0f}px, {class_gb:.3f}GB | "
             f"Tempo total execucao: {elapsed:.2f}s"
