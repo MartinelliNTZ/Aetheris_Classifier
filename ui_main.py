@@ -132,17 +132,17 @@ class MainWindow(QMainWindow):
         title_layout.addWidget(self.lbl_window_title)
         title_layout.addStretch()
 
-        self.btn_min = QPushButton("â€”")
+        self.btn_min = QPushButton("\u2014")
         self.btn_min.setObjectName("title_btn")
         self.btn_min.clicked.connect(self.showMinimized)
         title_layout.addWidget(self.btn_min)
 
-        self.btn_max = QPushButton("â–¡")
+        self.btn_max = QPushButton("\u25A1") 
         self.btn_max.setObjectName("title_btn")
         self.btn_max.clicked.connect(self._toggle_maximize_restore)
         title_layout.addWidget(self.btn_max)
 
-        self.btn_close = QPushButton("âœ•")
+        self.btn_close = QPushButton("\u2715")
         self.btn_close.setObjectName("title_btn_close")
         self.btn_close.clicked.connect(self.close)
         title_layout.addWidget(self.btn_close)
@@ -603,11 +603,11 @@ class MainWindow(QMainWindow):
         if self.isMaximized():
             self.showNormal()
             if hasattr(self, "btn_max"):
-                self.btn_max.setText("â–¡")
+                self.btn_max.setText("\u25A1")
         else:
             self.showMaximized()
             if hasattr(self, "btn_max"):
-                self.btn_max.setText("â")
+                self.btn_max.setText("\u29C9")   # ❐
 
     def resizeEvent(self, event):
         super().resizeEvent(event)
