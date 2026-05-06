@@ -514,6 +514,12 @@ class MainWindow(QMainWindow):
         action_lay.addWidget(self.btn_load_cfg)
         action_lay.addWidget(self.btn_save_cfg)
         action_lay.addWidget(self.btn_reset_cfg)
+
+        self.btn_clear_console = QPushButton("Limpar Console")
+        self.btn_clear_console.setObjectName("btn_secondary")
+        self.btn_clear_console.setCursor(Qt.CursorShape.PointingHandCursor)
+        action_lay.addWidget(self.btn_clear_console)
+
         action_lay.addStretch()
 
         self.btn_executar = QPushButton("EXECUTAR PIPELINE")

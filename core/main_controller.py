@@ -88,6 +88,7 @@ class MainController:
         self.view.btn_add_shp.clicked.connect(self._on_add_shp)
         self.view.combo_model_action.currentTextChanged.connect(self._on_model_action_changed)
         self.view.btn_listar_modelos.clicked.connect(self._on_listar_modelos)
+        self.view.btn_clear_console.clicked.connect(self._on_clear_console)
         self.view.txt_log.anchorClicked.connect(self._on_log_link_clicked)
 
         widgets_bind = [
@@ -259,6 +260,9 @@ class MainController:
             f"<b>RAM limite:</b> {ram}% | Mascara: {mask} | Zero->Nodata: {zero_nodata}"
         )
         self.view.lbl_resumo.setHtml(resumo)
+
+    def _on_clear_console(self):
+        self.view.txt_log.clear()
 
     def _on_executar(self):
         if self.worker is not None and self.worker.isRunning():
