@@ -211,91 +211,123 @@ class ClassifierPipeline:
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Report Execucao - {started_at.strftime("%Y-%m-%d %H:%M:%S")}</title>
   <style>
-    body {{ background:#121212; color:#EAEAEA; font-family:Segoe UI, Arial, sans-serif; margin:24px; }}
+    * {{ box-sizing:border-box; }}
+    body {{ background:#121212; color:#EAEAEA; font-family:Segoe UI, Arial, sans-serif; margin:18px; }}
     .card {{ background:#1E1E1E; border:1px solid #3E3E42; border-radius:10px; padding:14px; margin-bottom:14px; }}
     h1, h2, h3 {{ color:#D4A853; margin:0 0 10px 0; }}
-    p, li {{ color:#D0D0D0; }}
+    p, li {{ color:#D0D0D0; font-size:13px; }}
     ul {{ margin:6px 0 0 18px; }}
     .muted {{ color:#A0A0A0; }}
-    table {{ width:100%; border-collapse: collapse; }}
-    th, td {{ border:1px solid #3E3E42; padding:8px; text-align:left; font-size:13px; }}
+    table {{ width:100%; border-collapse: collapse; font-size:13px; }}
+    th, td {{ border:1px solid #3E3E42; padding:6px 8px; text-align:left; }}
     th {{ background:#252526; color:#EAEAEA; }}
+    .grid-2 {{ display:grid; grid-template-columns:1fr 1fr; gap:14px; }}
+    .header-row {{ display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; }}
+    .header-row h1 {{ margin:0; }}
+    .logo {{ width:48px; height:48px; }}
   </style>
 </head>
 <body>
-  <h1>Report de Execucao</h1>
-  <div class="card">
-    <h2>Resumo</h2>
-    <p><b>Inicio:</b> {started_at.strftime("%Y-%m-%d %H:%M:%S")}</p>
-    <p><b>Fim:</b> {finished_at.strftime("%Y-%m-%d %H:%M:%S")}</p>
-    <p><b>Tempo total:</b> {duration_hms} ({duration_seconds:.2f}s)</p>
-    <p><b>Acuracia:</b> {accuracy_text}</p>
-  </div>
-  <div class="card">
-    <h2>Hardware e Pipeline</h2>
-    <p><b>Dispositivo:</b> {getattr(self.hardware_info, "device", "-")}</p>
-    <p><b>RAM limite:</b> {float(getattr(self.hardware_info, "ram_limit_gb", 0.0)):.2f} GB ({self.config.ram_limit_pct}%)</p>
-    <p><b>Acao do modelo:</b> {self.config.model_action}</p>
-    <p><b>Camadas ocultas:</b> {self.config.hidden_layers} | <b>Ativacao:</b> {self.config.activation} | <b>Dropout:</b> {self.config.dropout_rate}</p>
-    <p><b>Mascara:</b> {self.config.use_mask} (limiar nodata = {self.config.nodata_threshold})</p>
-  </div>
-  <div class="card">
-    <h2>Arquivos Utilizados</h2>
-    <ul>
-      <li>Imagem treino: {self.config.training_image}</li>
-      <li>Imagem classificacao: {self.config.classification_image}</li>
-      <li>Saida classificada (TIF): {output_path}</li>
-      <li>Modelo: {model_path if model_path else "Nao aplicavel"}</li>
-      <li>Info JSON: {assets_folder_name}/{Path(str(execution_info_path)).name if execution_info_path else "Nao gerado"}</li>
-      <li>Relatorio metricas TXT: {assets_folder_name}/{evaluation.report_path.name if evaluation is not None else "Nao gerado"}</li>
-    </ul>
-  </div>
-  <div class="card">
-    <h2>Validacao das Imagens</h2>
-    <p><b>Treino:</b> {Path(str(train_info.get("path", "-"))).name if train_info else "Nao utilizado"} | {train_info.get("width", 0) if train_info else 0} x {train_info.get("height", 0) if train_info else 0} px | bandas: {train_info.get("bands", 0) if train_info else 0} | pixels: {train_pixels:,}</p>
-    <p><b>CRS treino:</b> {train_info.get("crs", "-") if train_info else "-"}</p>
-    <p><b>Classificacao:</b> {Path(str(class_info.get("path", "-"))).name} | {class_info.get("width", 0)} x {class_info.get("height", 0)} px | bandas: {class_info.get("bands", 0)} | pixels: {class_pixels:,}</p>
-    <p><b>CRS classificacao:</b> {class_info.get("crs", "-")}</p>
-  </div>
-  <div class="card">
-    <h2>Amostras por Classe</h2>
-    <ul>{shapefile_html}</ul>
-  </div>
-  <div class="card">
-    <h2>Metricas por Classe</h2>
-    <table>
-      <thead><tr><th>Classe</th><th>Precisao</th><th>Recall</th><th>F1-Score</th><th>Suporte</th></tr></thead>
-      <tbody>
-        {class_table_html}
-      </tbody>
-    </table>
-  </div>
-  <div class="card">
-    <h2>Graficos de Avaliacao</h2>
 
+  <!-- HEADER: Titulo + Logo -->
+  <div class="header-row">
+    <h1>Aetheris Classifier v6</h1>
+    <svg class="logo" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="50" cy="50" r="45" fill="#1E1E1E" stroke="#D4A853" stroke-width="3"/>
+      <text x="50" y="62" text-anchor="middle" fill="#D4A853" font-size="28" font-weight="900">A</text>
+    </svg>
+  </div>
+
+  <!-- GRID 2 COLUNAS -->
+  <div class="grid-2">
+
+    <!-- COLUNA ESQUERDA -->
+
+    <!-- Resumo -->
+    <div class="card">
+      <h2>Resumo</h2>
+      <p><b>Inicio:</b> {started_at.strftime("%Y-%m-%d %H:%M:%S")}</p>
+      <p><b>Fim:</b> {finished_at.strftime("%Y-%m-%d %H:%M:%S")}</p>
+      <p><b>Tempo total:</b> {duration_hms} ({duration_seconds:.2f}s)</p>
+      <p><b>Acuracia:</b> {accuracy_text}</p>
+    </div>
+
+    <!-- Arquivos Utilizados -->
+    <div class="card">
+      <h2>Arquivos</h2>
+      <ul>
+        <li><b>Treino:</b> {Path(str(self.config.training_image)).name}</li>
+        <li><b>Classif.:</b> {Path(str(self.config.classification_image)).name}</li>
+        <li><b>Saida TIF:</b> {Path(str(output_path)).name}</li>
+        <li><b>Modelo:</b> {Path(str(model_path)).name if model_path else "Nao aplicavel"}</li>
+        <li><b>Info JSON:</b> {Path(str(execution_info_path)).name if execution_info_path else "Nao gerado"}</li>
+        <li><b>Metricas:</b> {Path(str(evaluation.report_path)).name if evaluation is not None else "Nao gerado"}</li>
+      </ul>
+    </div>
+
+    <!-- COLUNA DIREITA -->
+
+    <!-- Hardware e Pipeline -->
+    <div class="card">
+      <h2>Hardware</h2>
+      <p><b>Dispositivo:</b> {getattr(self.hardware_info, "device", "-")}</p>
+      <p><b>RAM limite:</b> {float(getattr(self.hardware_info, "ram_limit_gb", 0.0)):.2f} GB ({self.config.ram_limit_pct}%)</p>
+      <p><b>Acao modelo:</b> {self.config.model_action}</p>
+      <p><b>Rede:</b> {self.config.hidden_layers} | <b>Ativ.:</b> {self.config.activation} | <b>Dropout:</b> {self.config.dropout_rate}</p>
+      <p><b>Mascara:</b> {self.config.use_mask} (nodata={self.config.nodata_threshold})</p>
+    </div>
+
+    <!-- Validacao das Imagens -->
+    <div class="card">
+      <h2>Imagens</h2>
+      <p><b>Treino:</b> {Path(str(train_info.get("path", "-"))).name if train_info else "Nao utilizado"} | {train_info.get("width", 0) if train_info else 0}x{train_info.get("height", 0) if train_info else 0} px | bandas: {train_info.get("bands", 0) if train_info else 0}</p>
+      <p><b>CRS treino:</b> {train_info.get("crs", "-") if train_info else "-"}</p>
+      <p><b>Classif.:</b> {Path(str(class_info.get("path", "-"))).name} | {class_info.get("width", 0)}x{class_info.get("height", 0)} px | bandas: {class_info.get("bands", 0)}</p>
+      <p><b>CRS classif.:</b> {class_info.get("crs", "-")}</p>
+    </div>
+
+  </div><!-- /grid-2 -->
+
+  <!-- SECOES 100% LARGURA -->
+
+  <!-- Amostras por Classe + Metricas juntos em grid-2 -->
+  <div class="grid-2">
+    <div class="card">
+      <h2>Amostras</h2>
+      <ul>{shapefile_html}</ul>
+    </div>
+    <div class="card">
+      <h2>Metricas</h2>
+      <table>
+        <thead><tr><th>Classe</th><th>Precisao</th><th>Recall</th><th>F1-Score</th><th>Suporte</th></tr></thead>
+        <tbody>
+          {class_table_html}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Graficos de Avaliacao (100%) -->
+  <div class="card">
+    <h2>Graficos</h2>
     <div style="display:flex; gap:14px; align-items:flex-start; width:100%; flex-wrap:wrap;">
       <div style="flex:1; min-width:260px;">
         {_img_tag(evaluation.confusion_matrix_path, "Matriz de Confusao") if evaluation is not None else "<p class='muted'>Nao gerado no modo de uso de modelo existente.</p>"}
       </div>
-
       <div style="flex:2; min-width:320px;">
         {_img_tag(evaluation.plot_loss_path, "Curvas de Loss e Accuracy") if evaluation is not None else ""}
       </div>
     </div>
-
     <style>
-      /* Ajuste responsivo das imagens dentro desta section
-         - Mesma altura fixa
-         - Larguras variáveis (1/3 vs 2/3 via flex)
-      */
       .card img{{
         width:100% !important;
-        height:420px !important;
+        height:400px !important;
         object-fit:contain;
         display:block;
       }}
     </style>
   </div>
+
 </body>
 </html>
 """
