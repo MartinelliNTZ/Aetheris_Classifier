@@ -3,7 +3,6 @@
 UI Profissional Dark Charcoal — Aetheris Classifier v6
 ===============================================================
 Interface premium em PySide6 para o pipeline main6_multcore.py.
-Apenas UI (frontend); a logica de execucao sera integrada posteriormente.
 """
 
 import sys
@@ -12,8 +11,8 @@ from PySide6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
     QLabel, QLineEdit, QPushButton, QSpinBox, QDoubleSpinBox, QComboBox,
     QCheckBox, QTableWidget, QTableWidgetItem, QHeaderView, QFileDialog,
-    QGroupBox, QSplitter, QTextEdit, QTextBrowser, QProgressBar, QFrame, QSizePolicy,
-    QScrollArea
+    QGroupBox, QTextEdit, QTextBrowser, QProgressBar, QFrame, QSizePolicy,
+    QScrollArea, QGridLayout
 )
 from PySide6.QtCore import Qt, QPoint
 from PySide6.QtGui import QFont, QIcon
@@ -27,7 +26,6 @@ from core.ui_field_specs import UI_FIELD_SPECS
 # =============================================================================
 
 class Badge(QLabel):
-    """Badge estilizado tipo tag premium."""
     def __init__(self, text: str, parent=None):
         super().__init__(text, parent)
         self.setObjectName("section_badge")
@@ -35,7 +33,6 @@ class Badge(QLabel):
 
 
 class Separator(QFrame):
-    """Linha separadora horizontal sutil."""
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setObjectName("separator")
@@ -45,7 +42,6 @@ class Separator(QFrame):
 
 
 class PathBrowseRow(QWidget):
-    """Linha com label, campo de texto e botao browse."""
     def __init__(self, label_text: str, default_path: str = "", file_mode=True,
                  file_filter="Todos (*.*)", browse_mode: str = "open_file", parent=None):
         super().__init__(parent)
@@ -55,20 +51,17 @@ class PathBrowseRow(QWidget):
 
         layout = QHBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(10)
+        layout.setSpacing(6)
 
         self.label = QLabel(label_text)
-        self.label.setFixedWidth(140)
-        self.label.setStyleSheet(
-            f"color: {DarkCharcoalStyle.TEXT_SECONDARY}; font-weight: 500;"
-        )
+        self.label.setFixedWidth(130)
 
         self.edit = QLineEdit(default_path)
         self.edit.setPlaceholderText("Caminho do arquivo...")
 
         self.btn = QPushButton("...")
         self.btn.setObjectName("btn_secondary")
-        self.btn.setFixedWidth(32)
+        self.btn.setFixedWidth(30)
         self.btn.setCursor(Qt.CursorShape.PointingHandCursor)
         self.btn.clicked.connect(self._browse)
 
@@ -104,14 +97,29 @@ class MainWindow(QMainWindow):
         super().__init__()
         self.setWindowTitle("Aetheris Classifier v6 Premium")
         self.setWindowFlags(Qt.WindowType.FramelessWindowHint | Qt.WindowType.Window)
-        self.setMinimumSize(1280, 860)
+        self.setMinimumSize(1200, 800)
         icon_path = Path(__file__).parent / "Aetheris.png"
         if icon_path.exists():
             self.setWindowIcon(QIcon(str(icon_path)))
-        self.resize(1440, 900)
+        self.resize(1400, 880)
         self._drag_active = False
         self._drag_offset = QPoint()
         self._build_ui()
+
+    def _make_group_box(self, title: str) -> QGroupBox:
+        """Cria um GroupBox com titulo DENTRO do box (nao sobre a borda)."""
+        gb = QGroupBox(title)
+        gb.setStyleSheet(
+            "QGroupBox {"
+            "  font-weight: 700;"
+            "  color: #D4A853;"
+            "  border: 1px solid #3E3E42;"
+            "  border-radius: 6px;"
+            "  margin-top: 8px;"
+            "  padding: 18px 10px 10px 10px;"
+            "}"
+        )
+        return gb
 
     def _build_ui(self):
         root = QWidget()
@@ -120,424 +128,353 @@ class MainWindow(QMainWindow):
         root_layout.setSpacing(0)
         self.setCentralWidget(root)
 
+        # --- TITLE BAR ---
         title_bar = QWidget()
         title_bar.setObjectName("title_bar")
-        title_bar.setFixedHeight(38)
+        title_bar.setFixedHeight(36)
         title_layout = QHBoxLayout(title_bar)
-        title_layout.setContentsMargins(12, 0, 6, 0)
-        title_layout.setSpacing(8)
-
+        title_layout.setContentsMargins(10, 0, 6, 0)
+        title_layout.setSpacing(6)
         self.lbl_window_title = QLabel(self.windowTitle())
         self.lbl_window_title.setObjectName("window_title")
         title_layout.addWidget(self.lbl_window_title)
         title_layout.addStretch()
-
         self.btn_min = QPushButton("\u2014")
         self.btn_min.setObjectName("title_btn")
         self.btn_min.clicked.connect(self.showMinimized)
         title_layout.addWidget(self.btn_min)
-
-        self.btn_max = QPushButton("\u25A1") 
+        self.btn_max = QPushButton("\u25A1")
         self.btn_max.setObjectName("title_btn")
         self.btn_max.clicked.connect(self._toggle_maximize_restore)
         title_layout.addWidget(self.btn_max)
-
         self.btn_close = QPushButton("\u2715")
         self.btn_close.setObjectName("title_btn_close")
         self.btn_close.clicked.connect(self.close)
         title_layout.addWidget(self.btn_close)
-
         root_layout.addWidget(title_bar)
 
+        # --- MAIN SCROLL ---
         scroll = QScrollArea()
         scroll.setWidgetResizable(True)
         scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-
         central = QWidget()
         scroll.setWidget(central)
         root_layout.addWidget(scroll, 1)
 
         main_layout = QVBoxLayout(central)
-        main_layout.setContentsMargins(22, 16, 22, 16)
-        main_layout.setSpacing(14)
+        main_layout.setContentsMargins(18, 10, 18, 10)
+        main_layout.setSpacing(8)
 
-        # HEADER PREMIUM
+        # --- HEADER ---
         header = QWidget()
-        header_layout = QHBoxLayout(header)
-        header_layout.setContentsMargins(0, 0, 0, 0)
-        header_layout.setSpacing(12)
-
-        title_col = QVBoxLayout()
-        title_col.setSpacing(4)
-
+        hl = QHBoxLayout(header)
+        hl.setContentsMargins(0, 0, 0, 0)
+        hl.setSpacing(10)
+        tc = QVBoxLayout()
+        tc.setSpacing(2)
         self.lbl_title = QLabel("Aetheris Classifier")
         self.lbl_title.setObjectName("header_title")
-
-        self.lbl_subtitle = QLabel(
-            "Pipeline de classificacao supervisionada com redes neurais profundas "
-            "— extracao espectral, treinamento multicore e exportacao GeoTIFF."
-        )
+        self.lbl_subtitle = QLabel("Pipeline de classificacao supervisionada com redes neurais profundas")
         self.lbl_subtitle.setObjectName("header_subtitle")
         self.lbl_subtitle.setWordWrap(True)
-
-        title_col.addWidget(self.lbl_title)
-        title_col.addWidget(self.lbl_subtitle)
-
-        header_layout.addLayout(title_col, 1)
-
+        tc.addWidget(self.lbl_title)
+        tc.addWidget(self.lbl_subtitle)
+        hl.addLayout(tc, 1)
         self.badge_status = Badge("PRONTA")
         self.badge_status.setStyleSheet(
-            "QLabel {"
-            f"  background-color: {DarkCharcoalStyle.SUCCESS};"
-            f"  color: {DarkCharcoalStyle.DARK_BG};"
-            "  border-radius: 6px;"
-            "  padding: 4px 14px;"
-            "  font-weight: 700;"
-            "  font-size: 11px;"
-            "}"
+            f"background-color: {DarkCharcoalStyle.SUCCESS}; color: {DarkCharcoalStyle.DARK_BG};"
+            " border-radius: 5px; padding: 3px 12px; font-weight: 700; font-size: 10px;"
         )
-        header_layout.addWidget(self.badge_status, alignment=Qt.AlignmentFlag.AlignVCenter)
-
+        hl.addWidget(self.badge_status, alignment=Qt.AlignmentFlag.AlignVCenter)
         main_layout.addWidget(header)
         main_layout.addWidget(Separator())
 
-        # CORPO — Splitter esquerda / direita
-        splitter = QSplitter(Qt.Orientation.Horizontal)
-
-        # Painel Esquerdo
-        left_panel = QWidget()
-        left_layout = QVBoxLayout(left_panel)
-        left_layout.setContentsMargins(0, 0, 0, 0)
-        left_layout.setSpacing(6)
-
-        # Grupo: Imagens
-        grp_imagens = QGroupBox("Imagens e Saida")
-        lay_img = QVBoxLayout(grp_imagens)
-        lay_img.setSpacing(8)
-
-        self.row_img_treino = PathBrowseRow(
-            "Imagem Treino", "dados/imagemTreino.tif",
-            file_filter="GeoTIFF (*.tif *.tiff)"
+        # --- ACTION BUTTONS ---
+        btn_style = (
+            "QPushButton {"
+            f"  background-color: {DarkCharcoalStyle.DARK_BG};"
+            f"  color: {DarkCharcoalStyle.ACCENT_GOLD};"
+            "  border: 1px solid #555555;"
+            "  border-radius: 5px;"
+            "  padding: 6px 14px;"
+            "  font-weight: 600;"
+            "  font-size: 11px;"
+            "}"
+            "QPushButton:hover {"
+            "  background-color: #2A2A2A;"
+            f"  border-color: {DarkCharcoalStyle.ACCENT_GOLD};"
+            "}"
+            "QPushButton:pressed { background-color: #1A1A1A; }"
         )
-        self.row_img_classif = PathBrowseRow(
-            "Imagem Classif.", "dados/imagemCompleta.tif",
-            file_filter="GeoTIFF (*.tif *.tiff)"
+        ab = QWidget()
+        al = QHBoxLayout(ab)
+        al.setContentsMargins(0, 0, 0, 0)
+        al.setSpacing(6)
+        self.btn_load_cfg = QPushButton("Carregar Config")
+        self.btn_load_cfg.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.btn_load_cfg.setStyleSheet(btn_style)
+        self.btn_load_cfg.setMinimumHeight(32)
+        self.btn_save_cfg = QPushButton("Salvar Config")
+        self.btn_save_cfg.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.btn_save_cfg.setStyleSheet(btn_style)
+        self.btn_save_cfg.setMinimumHeight(32)
+        self.btn_reset_cfg = QPushButton("Restaurar Padrao")
+        self.btn_reset_cfg.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.btn_reset_cfg.setStyleSheet(btn_style)
+        self.btn_reset_cfg.setMinimumHeight(32)
+        self.btn_clear_console = QPushButton("Limpar Console")
+        self.btn_clear_console.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.btn_clear_console.setStyleSheet(btn_style)
+        self.btn_clear_console.setMinimumHeight(32)
+        al.addWidget(self.btn_load_cfg)
+        al.addWidget(self.btn_save_cfg)
+        al.addWidget(self.btn_reset_cfg)
+        al.addWidget(self.btn_clear_console)
+        al.addStretch()
+        self.btn_executar = QPushButton("EXECUTAR PIPELINE")
+        self.btn_executar.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.btn_executar.setStyleSheet(
+            "QPushButton {"
+            f"  background-color: {DarkCharcoalStyle.ACCENT_GOLD};"
+            f"  color: {DarkCharcoalStyle.DARK_BG};"
+            "  border: none; border-radius: 5px; padding: 6px 20px;"
+            "  font-weight: 800; font-size: 13px;"
+            "}"
+            "QPushButton:hover { background-color: #E8C060; }"
+            "QPushButton:pressed { background-color: #C4A040; }"
+            "QPushButton:disabled { background-color: #555555; color: #888888; }"
         )
-        self.row_img_saida = PathBrowseRow(
-            "Saida GeoTIFF", "resultado/mapa_classificado_ui.tif",
-            file_filter="GeoTIFF (*.tif *.tiff)", browse_mode="save_file"
+        self.btn_executar.setMinimumWidth(180)
+        self.btn_executar.setMinimumHeight(34)
+        al.addWidget(self.btn_executar)
+        main_layout.addWidget(ab)
+
+        # =====================================================================
+        # GRID 2x2 + CONSOLE
+        # =====================================================================
+        grid = QGridLayout()
+        grid.setSpacing(10)
+
+        # ---- (0,0) - IMAGENS & SAIDA ----
+        grp_img = self._make_group_box("Imagens & Saida")
+        li = QVBoxLayout(grp_img)
+        li.setSpacing(6)
+        li.setContentsMargins(6, 6, 6, 6)
+        self.row_img_treino = PathBrowseRow("Imagem Treino", "dados/imagemTreino.tif",
+            file_filter="GeoTIFF (*.tif *.tiff)")
+        self.row_img_classif = PathBrowseRow("Imagem Classif.", "dados/imagemCompleta.tif",
+            file_filter="GeoTIFF (*.tif *.tiff)")
+        self.row_img_saida = PathBrowseRow("Saida GeoTIFF", "resultado/mapa_classificado_ui.tif",
+            file_filter="GeoTIFF (*.tif *.tiff)", browse_mode="save_file")
+        li.addWidget(self.row_img_treino)
+        li.addWidget(self.row_img_classif)
+        li.addWidget(self.row_img_saida)
+        li.addStretch()
+        grid.addWidget(grp_img, 0, 0)
+
+        # ---- (0,1) - PERSISTENCIA DO MODELO ----
+        grp_mod = self._make_group_box("Persistencia do Modelo")
+        lm = QVBoxLayout(grp_mod)
+        lm.setSpacing(6)
+        lm.setContentsMargins(6, 6, 6, 6)
+        rm = QHBoxLayout()
+        rm.setSpacing(6)
+        rm.addWidget(QLabel("Acao:"))
+        self.combo_model_action = QComboBox()
+        self.combo_model_action.addItems([
+            "Treinar modelo novo", "Treinar modelo existente", "Usar modelo existente"
+        ])
+        self.combo_model_action.setCurrentText("Treinar modelo novo")
+        rm.addWidget(self.combo_model_action, 1)
+        lm.addLayout(rm)
+        self.row_modelo_existente = PathBrowseRow("Modelo Existente", "",
+            file_filter="Keras Model (*.keras)")
+        self.row_modelo_existente.setVisible(False)
+        lm.addWidget(self.row_modelo_existente)
+        self.btn_listar_modelos = QPushButton("Listar Modelos")
+        self.btn_listar_modelos.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.btn_listar_modelos.setStyleSheet(
+            "QPushButton { background-color: #1E1E1E; color: #D4A853; border: 1px solid #555555;"
+            " border-radius: 4px; padding: 4px 12px; font-weight: 600; font-size: 11px; }"
+            "QPushButton:hover { border-color: #D4A853; }"
         )
+        self.btn_listar_modelos.setVisible(False)
+        lm.addWidget(self.btn_listar_modelos, alignment=Qt.AlignmentFlag.AlignLeft)
+        self.chk_salvar_modelo = QCheckBox("Salvar modelo (.keras)")
+        self.chk_salvar_modelo.setChecked(True)
+        lm.addWidget(self.chk_salvar_modelo)
+        self.row_modelo_path = PathBrowseRow("Caminho", "resultado/modelo_ui.keras",
+            file_filter="Keras Model (*.keras)")
+        lm.addWidget(self.row_modelo_path)
+        lm.addStretch()
+        grid.addWidget(grp_mod, 0, 1)
 
-        lay_img.addWidget(self.row_img_treino)
-        lay_img.addWidget(self.row_img_classif)
-        lay_img.addWidget(self.row_img_saida)
-
-        left_layout.addWidget(grp_imagens)
-
-        # Grupo: Amostras
-        grp_amostras = QGroupBox("Amostras de Shapefiles por Classe")
-        lay_amostras = QVBoxLayout(grp_amostras)
-        lay_amostras.setSpacing(8)
-
+        # ---- (1,0) - SHAPEFILES ----
+        grp_shp = self._make_group_box("Shapefiles por Classe")
+        ls = QVBoxLayout(grp_shp)
+        ls.setSpacing(6)
+        ls.setContentsMargins(6, 6, 6, 6)
         self.table_shp = QTableWidget(0, 4)
-        self.table_shp.setHorizontalHeaderLabels(
-            ["Caminho do Shapefile", "ID Classe", "Legenda", "Acao"]
-        )
-        self.table_shp.horizontalHeader().setStretchLastSection(False)
-        self.table_shp.horizontalHeader().setSectionResizeMode(
-            0, QHeaderView.ResizeMode.Stretch
-        )
-        self.table_shp.horizontalHeader().setSectionResizeMode(
-            1, QHeaderView.ResizeMode.Fixed
-        )
-        self.table_shp.horizontalHeader().setSectionResizeMode(
-            2, QHeaderView.ResizeMode.Fixed
-        )
-        self.table_shp.horizontalHeader().setSectionResizeMode(
-            3, QHeaderView.ResizeMode.Fixed
-        )
-        self.table_shp.setColumnWidth(1, 80)
-        self.table_shp.setColumnWidth(2, 140)
-        self.table_shp.setColumnWidth(3, 90)
-        self.table_shp.setMinimumHeight(140)
-
+        self.table_shp.setHorizontalHeaderLabels(["Caminho", "ID", "Legenda", ""])
+        hh = self.table_shp.horizontalHeader()
+        hh.setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
+        hh.setSectionResizeMode(1, QHeaderView.ResizeMode.Fixed)
+        hh.setSectionResizeMode(2, QHeaderView.ResizeMode.Fixed)
+        hh.setSectionResizeMode(3, QHeaderView.ResizeMode.Fixed)
+        self.table_shp.setColumnWidth(1, 55)
+        self.table_shp.setColumnWidth(2, 90)
+        self.table_shp.setColumnWidth(3, 65)
+        self.table_shp.setMinimumHeight(100)
+        self.table_shp.verticalHeader().setDefaultSectionSize(24)
+        ls.addWidget(self.table_shp)
         btn_add_shp = QPushButton("+ Adicionar Shapefile")
-        btn_add_shp.setObjectName("btn_action")
         btn_add_shp.setCursor(Qt.CursorShape.PointingHandCursor)
+        btn_add_shp.setStyleSheet(
+            "QPushButton { background-color: #1E1E1E; color: #D4A853; border: 1px solid #555555;"
+            " border-radius: 4px; padding: 4px 12px; font-weight: 600; font-size: 11px; }"
+            "QPushButton:hover { border-color: #D4A853; }"
+        )
         self.btn_add_shp = btn_add_shp
+        ls.addWidget(btn_add_shp, alignment=Qt.AlignmentFlag.AlignLeft)
+        ls.addStretch()
+        grid.addWidget(grp_shp, 1, 0)
 
-        lay_amostras.addWidget(self.table_shp)
-        lay_amostras.addWidget(btn_add_shp, alignment=Qt.AlignmentFlag.AlignLeft)
-        left_layout.addWidget(grp_amostras)
+        # ---- (1,1) - REDE NEURAL & TREINAMENTO ----
+        grp_rede = self._make_group_box("Rede Neural & Treinamento")
+        lr = QGridLayout(grp_rede)
+        lr.setSpacing(6)
+        lr.setContentsMargins(6, 6, 6, 6)
 
-        # Grupo: Arquitetura da Rede
-        grp_rede = QGroupBox("Arquitetura da Rede Neural")
-        lay_rede = QVBoxLayout(grp_rede)
-        lay_rede.setSpacing(8)
+        # col 0 = labels, col 1 = widgets, col 2 = more labels, col 3 = more widgets
 
-        row_camadas = QHBoxLayout()
-        row_camadas.setSpacing(10)
-        row_camadas.addWidget(QLabel("Camadas Ocultas:"))
+        # Row 0: Camadas Ocultas + Ativacao
+        lr.addWidget(QLabel("Camadas:"), 0, 0)
         self.edit_camadas = QLineEdit("128, 64, 32")
         self.edit_camadas.setPlaceholderText("ex: 256, 128, 64")
-        row_camadas.addWidget(self.edit_camadas, 1)
-
-        row_camadas.addWidget(QLabel("Ativacao:"))
+        lr.addWidget(self.edit_camadas, 0, 1)
+        lr.addWidget(QLabel("Ativacao:"), 0, 2)
         self.combo_ativacao = QComboBox()
         self.combo_ativacao.addItems(["relu", "elu", "tanh", "sigmoid", "linear"])
         self.combo_ativacao.setCurrentText("relu")
-        row_camadas.addWidget(self.combo_ativacao)
+        lr.addWidget(self.combo_ativacao, 0, 3)
 
-        lay_rede.addLayout(row_camadas)
-
-        row_dropout = QHBoxLayout()
-        row_dropout.setSpacing(10)
-        row_dropout.addWidget(QLabel("Dropout:"))
+        # Row 1: Dropout + Epocas + Batch Treino
+        lr.addWidget(QLabel("Dropout:"), 1, 0)
         self.spin_dropout = QDoubleSpinBox()
         self.spin_dropout.setRange(0.0, 0.9)
         self.spin_dropout.setSingleStep(0.05)
         self.spin_dropout.setDecimals(2)
         self.spin_dropout.setValue(0.1)
-        self.spin_dropout.setSuffix("  (0 = desativado)")
-        row_dropout.addWidget(self.spin_dropout)
-        row_dropout.addStretch()
-        lay_rede.addLayout(row_dropout)
-        left_layout.addWidget(grp_rede)
+        lr.addWidget(self.spin_dropout, 1, 1)
 
-        # Grupo: Treinamento
-        grp_treino = QGroupBox("Hiperparametros de Treinamento")
-        lay_treino = QVBoxLayout(grp_treino)
-        lay_treino.setSpacing(8)
-
-        grid_treino = QHBoxLayout()
-        grid_treino.setSpacing(12)
-
-        col = QVBoxLayout()
-        col.addWidget(QLabel("Epocas"))
+        lr.addWidget(QLabel("Epocas:"), 1, 2)
         self.spin_epochs = QSpinBox()
         self.spin_epochs.setRange(1, 10000)
         self.spin_epochs.setValue(150)
-        col.addWidget(self.spin_epochs)
-        grid_treino.addLayout(col)
+        lr.addWidget(self.spin_epochs, 1, 3)
 
-        col = QVBoxLayout()
-        col.addWidget(QLabel("Batch Treino"))
+        # Row 2: Batch Treino + Batch Pred
+        lr.addWidget(QLabel("Batch Treino:"), 2, 0)
         self.spin_batch_train = QSpinBox()
         self.spin_batch_train.setRange(1, 8192)
         self.spin_batch_train.setValue(64)
-        col.addWidget(self.spin_batch_train)
-        grid_treino.addLayout(col)
+        lr.addWidget(self.spin_batch_train, 2, 1)
 
-        col = QVBoxLayout()
-        col.addWidget(QLabel("Batch Predicao"))
+        lr.addWidget(QLabel("Batch Pred.:"), 2, 2)
         self.spin_batch_pred = QSpinBox()
         self.spin_batch_pred.setRange(1, 65536)
         self.spin_batch_pred.setValue(4096)
-        col.addWidget(self.spin_batch_pred)
-        grid_treino.addLayout(col)
+        lr.addWidget(self.spin_batch_pred, 2, 3)
 
-        col = QVBoxLayout()
-        col.addWidget(QLabel("Test Size (%)"))
+        # Row 3: Test Size + Random State
+        lr.addWidget(QLabel("Test Size:"), 3, 0)
         self.spin_test_size = QDoubleSpinBox()
         self.spin_test_size.setRange(0.01, 0.99)
         self.spin_test_size.setSingleStep(0.01)
         self.spin_test_size.setDecimals(2)
         self.spin_test_size.setValue(0.30)
-        col.addWidget(self.spin_test_size)
-        grid_treino.addLayout(col)
+        lr.addWidget(self.spin_test_size, 3, 1)
 
-        col = QVBoxLayout()
-        col.addWidget(QLabel("Random State"))
+        lr.addWidget(QLabel("Random State:"), 3, 2)
         self.spin_random = QSpinBox()
         self.spin_random.setRange(0, 999999)
         self.spin_random.setValue(42)
-        col.addWidget(self.spin_random)
-        grid_treino.addLayout(col)
+        lr.addWidget(self.spin_random, 3, 3)
 
-        lay_treino.addLayout(grid_treino)
-        left_layout.addWidget(grp_treino)
-
-        # Grupo: Hardware e Mascara
-        grp_hw = QGroupBox("Hardware e Pre-processamento")
-        lay_hw = QVBoxLayout(grp_hw)
-        lay_hw.setSpacing(8)
-
-        row_hw1 = QHBoxLayout()
-        row_hw1.setSpacing(12)
-
-        col = QVBoxLayout()
-        col.addWidget(QLabel("Limite RAM (%)"))
+        # Row 4: RAM % + Mascara + Nodata + Limiar
+        lr.addWidget(QLabel("RAM:"), 4, 0)
         self.spin_ram = QSpinBox()
         self.spin_ram.setRange(10, 95)
         self.spin_ram.setValue(70)
         self.spin_ram.setSuffix(" %")
-        col.addWidget(self.spin_ram)
-        row_hw1.addLayout(col)
+        lr.addWidget(self.spin_ram, 4, 1)
 
-        self.chk_mascara = QCheckBox("Usar mascara (ultima banda = alpha)")
+        self.chk_mascara = QCheckBox("Mascara alpha")
         self.chk_mascara.setChecked(True)
-        row_hw1.addWidget(self.chk_mascara, alignment=Qt.AlignmentFlag.AlignBottom)
+        lr.addWidget(self.chk_mascara, 4, 2)
 
-        self.chk_zero_nodata = QCheckBox("Valores zerados como nodata")
+        self.chk_zero_nodata = QCheckBox("0 = nodata")
         self.chk_zero_nodata.setChecked(False)
-        row_hw1.addWidget(self.chk_zero_nodata, alignment=Qt.AlignmentFlag.AlignBottom)
+        lr.addWidget(self.chk_zero_nodata, 4, 3)
 
-        col = QVBoxLayout()
-        col.addWidget(QLabel("Limiar Nodata"))
+        # Row 5: Limiar nodata
+        lr.addWidget(QLabel("Limiar Nodata:"), 5, 0)
         self.spin_alpha = QSpinBox()
         self.spin_alpha.setRange(0, 255)
         self.spin_alpha.setValue(250)
-        col.addWidget(self.spin_alpha)
-        row_hw1.addLayout(col)
+        lr.addWidget(self.spin_alpha, 5, 1)
 
-        lay_hw.addLayout(row_hw1)
-        left_layout.addWidget(grp_hw)
+        # Column stretch: labels fixed, widgets expand
+        lr.setColumnStretch(0, 0)  # label
+        lr.setColumnStretch(1, 1)  # widget
+        lr.setColumnStretch(2, 0)  # label
+        lr.setColumnStretch(3, 1)  # widget
 
-        # Grupo: Persistencia
-        grp_modelo = QGroupBox("Persistencia do Modelo")
-        lay_modelo = QVBoxLayout(grp_modelo)
-        lay_modelo.setSpacing(8)
+        # Row stretch: rows have fixed height, last row expands if space
+        lr.setRowStretch(5, 1)
 
-        row_model_action = QHBoxLayout()
-        row_model_action.setSpacing(10)
-        row_model_action.addWidget(QLabel("Acao do Modelo:"))
-        self.combo_model_action = QComboBox()
-        self.combo_model_action.addItems([
-            "Treinar modelo novo",
-            "Treinar modelo existente",
-            "Usar modelo existente"
-        ])
-        self.combo_model_action.setCurrentText("Treinar modelo novo")
-        row_model_action.addWidget(self.combo_model_action, 1)
-        lay_modelo.addLayout(row_model_action)
+        grid.addWidget(grp_rede, 1, 1)
 
-        self.row_modelo_existente = PathBrowseRow(
-            "Modelo Existente", "",
-            file_filter="Keras Model (*.keras)"
-        )
-        self.row_modelo_existente.setVisible(False)
-        lay_modelo.addWidget(self.row_modelo_existente)
-        
-        self.btn_listar_modelos = QPushButton("Listar Modelos")
-        self.btn_listar_modelos.setObjectName("btn_secondary")
-        self.btn_listar_modelos.setCursor(Qt.CursorShape.PointingHandCursor)
-        self.btn_listar_modelos.setVisible(False)
-        lay_modelo.addWidget(self.btn_listar_modelos, alignment=Qt.AlignmentFlag.AlignLeft)
+        # Column stretch: 50% / 50%
+        grid.setColumnStretch(0, 1)
+        grid.setColumnStretch(1, 1)
 
-        self.chk_salvar_modelo = QCheckBox("Salvar modelo treinado em disco (.keras)")
-        self.chk_salvar_modelo.setChecked(True)
-        lay_modelo.addWidget(self.chk_salvar_modelo)
+        # Row stretch: equal height for both rows
+        grid.setRowStretch(0, 1)
+        grid.setRowStretch(1, 1)
 
-        self.row_modelo_path = PathBrowseRow(
-            "Caminho do Modelo", "resultado/modelo_ui.keras",
-            file_filter="Keras Model (*.keras)"
-        )
-        lay_modelo.addWidget(self.row_modelo_path)
-        left_layout.addWidget(grp_modelo)
+        main_layout.addLayout(grid)
 
-        left_layout.addStretch()
-
-        # Painel Direito
-        right_panel = QWidget()
-        right_layout = QVBoxLayout(right_panel)
-        right_layout.setContentsMargins(0, 12, 0, 0)
-        right_layout.setSpacing(6)
-
-        card_preview = QFrame()
-        card_preview.setStyleSheet(
-            "QFrame {"
-            f"  background-color: {DarkCharcoalStyle.PANEL_BG};"
-            f"  border: 1px solid {DarkCharcoalStyle.BORDER};"
-            "  border-radius: 12px;"
-            "}"
-        )
-        card_lay = QVBoxLayout(card_preview)
-        card_lay.setContentsMargins(12, 12, 12, 12)
-        card_lay.setSpacing(8)
-
-        prev_title = QLabel("Resumo da Configuracao")
-        prev_title.setStyleSheet(
-            f"color: {DarkCharcoalStyle.ACCENT_GOLD}; font-weight: 700; font-size: 14px;"
-        )
-        card_lay.addWidget(prev_title)
-
+        # --- Resumo hidden (compatibilidade controller) ---
         self.lbl_resumo = QTextEdit()
         self.lbl_resumo.setReadOnly(True)
-        self.lbl_resumo.setMaximumHeight(140)
-        self.lbl_resumo.setStyleSheet(
-            "QTextEdit {"
-            f"  background-color: {DarkCharcoalStyle.CARD_BG};"
-            f"  border: 1px solid {DarkCharcoalStyle.BORDER};"
-            "  border-radius: 8px;"
-            f"  color: {DarkCharcoalStyle.TEXT_SECONDARY};"
-            "  font-size: 12px;"
-            "  padding: 10px;"
-            "}"
-        )
-        card_lay.addWidget(self.lbl_resumo)
+        self.lbl_resumo.setMaximumHeight(1)
+        self.lbl_resumo.setVisible(False)
+        main_layout.addWidget(self.lbl_resumo)
 
-        right_layout.addWidget(card_preview)
-
-        grp_log = QGroupBox("Console de Execucao")
-        lay_log = QVBoxLayout(grp_log)
+        # --- CONSOLE ---
+        grp_log = self._make_group_box("Console de Execucao")
+        ll = QVBoxLayout(grp_log)
+        ll.setSpacing(4)
+        ll.setContentsMargins(6, 6, 6, 6)
         self.txt_log = QTextBrowser()
         self.txt_log.setReadOnly(True)
         self.txt_log.setOpenLinks(False)
         self.txt_log.setOpenExternalLinks(False)
         self.txt_log.setPlaceholderText("Aguardando inicio do pipeline...")
-        lay_log.addWidget(self.txt_log)
-        right_layout.addWidget(grp_log, 1)
+        self.txt_log.setMinimumHeight(140)
+        ll.addWidget(self.txt_log)
+        main_layout.addWidget(grp_log)
 
+        # --- PROGRESS ---
         self.progress = QProgressBar()
         self.progress.setValue(0)
         self.progress.setTextVisible(True)
         self.progress.setFormat(" %p% — aguardando... ")
-        right_layout.addWidget(self.progress)
+        self.progress.setFixedHeight(18)
+        main_layout.addWidget(self.progress)
 
-        action_bar = QWidget()
-        action_lay = QHBoxLayout(action_bar)
-        action_lay.setContentsMargins(0, 0, 0, 0)
-        action_lay.setSpacing(8)
-
-        self.btn_load_cfg = QPushButton("Carregar Config")
-        self.btn_load_cfg.setObjectName("btn_secondary")
-        self.btn_load_cfg.setCursor(Qt.CursorShape.PointingHandCursor)
-
-        self.btn_save_cfg = QPushButton("Salvar Config")
-        self.btn_save_cfg.setObjectName("btn_secondary")
-        self.btn_save_cfg.setCursor(Qt.CursorShape.PointingHandCursor)
-
-        self.btn_reset_cfg = QPushButton("Restaurar Padrao")
-        self.btn_reset_cfg.setObjectName("btn_secondary")
-        self.btn_reset_cfg.setCursor(Qt.CursorShape.PointingHandCursor)
-
-        action_lay.addWidget(self.btn_load_cfg)
-        action_lay.addWidget(self.btn_save_cfg)
-        action_lay.addWidget(self.btn_reset_cfg)
-
-        self.btn_clear_console = QPushButton("Limpar Console")
-        self.btn_clear_console.setObjectName("btn_secondary")
-        self.btn_clear_console.setCursor(Qt.CursorShape.PointingHandCursor)
-        action_lay.addWidget(self.btn_clear_console)
-
-        action_lay.addStretch()
-
-        self.btn_executar = QPushButton("EXECUTAR PIPELINE")
-        self.btn_executar.setObjectName("btn_primary")
-        self.btn_executar.setCursor(Qt.CursorShape.PointingHandCursor)
-        self.btn_executar.setMinimumWidth(200)
-        self.btn_executar.setMinimumHeight(38)
-        action_lay.addWidget(self.btn_executar)
-
-        right_layout.addWidget(action_bar)
-
-        splitter.addWidget(left_panel)
-        splitter.addWidget(right_panel)
-        splitter.setStretchFactor(0, 55)
-        splitter.setStretchFactor(1, 45)
-        splitter.setHandleWidth(2)
-        main_layout.addWidget(splitter, 1)
-
+        # --- CONTROLLER ---
         self.controller = MainController(self)
         self.loader_overlay = HudCircularRingsLoader(self)
         self.loader_overlay.setGeometry(self.rect())
@@ -576,31 +513,26 @@ class MainWindow(QMainWindow):
     def _add_shp_row(self, path: str, classe: int, legenda: str = ""):
         row = self.table_shp.rowCount()
         self.table_shp.insertRow(row)
-
-        item_path = QTableWidgetItem(path)
-        item_path.setFlags(item_path.flags() & ~Qt.ItemFlag.ItemIsEditable)
-        self.table_shp.setItem(row, 0, item_path)
-
-        spin_cls = QSpinBox()
-        spin_cls.setRange(0, 999)
-        spin_cls.setValue(classe)
-        spin_cls.setStyleSheet("background-color: transparent; border: none;")
-        self.table_shp.setCellWidget(row, 1, spin_cls)
-
-        edit_legenda = QLineEdit(legenda)
-        edit_legenda.setPlaceholderText("Ex: Floresta, Urbano...")
-        edit_legenda.setStyleSheet("background-color: transparent; border: none;")
-        self.table_shp.setCellWidget(row, 2, edit_legenda)
-
-        btn_rem = QPushButton("Remover")
-        btn_rem.setObjectName("btn_danger")
-        btn_rem.setCursor(Qt.CursorShape.PointingHandCursor)
-        btn_rem.clicked.connect(lambda checked, r=row: self._remove_shp_row(r))
-        self.table_shp.setCellWidget(row, 3, btn_rem)
+        ip = QTableWidgetItem(path)
+        ip.setFlags(ip.flags() & ~Qt.ItemFlag.ItemIsEditable)
+        self.table_shp.setItem(row, 0, ip)
+        sc = QSpinBox()
+        sc.setRange(0, 999)
+        sc.setValue(classe)
+        sc.setStyleSheet("background-color: transparent; border: none;")
+        self.table_shp.setCellWidget(row, 1, sc)
+        el = QLineEdit(legenda)
+        el.setPlaceholderText("Legenda...")
+        el.setStyleSheet("background-color: transparent; border: none;")
+        self.table_shp.setCellWidget(row, 2, el)
+        br = QPushButton("Remover")
+        br.setObjectName("btn_danger")
+        br.setCursor(Qt.CursorShape.PointingHandCursor)
+        br.clicked.connect(lambda checked, r=row: self._remove_shp_row(r))
+        self.table_shp.setCellWidget(row, 3, br)
 
     def _remove_shp_row(self, row: int):
         self.table_shp.removeRow(row)
-        # Reindexa os lambdas dos botoes de remover nas linhas restantes
         for r in range(self.table_shp.rowCount()):
             btn = self.table_shp.cellWidget(r, 3)
             if btn:
@@ -626,7 +558,7 @@ class MainWindow(QMainWindow):
             self.loader_overlay.setGeometry(self.rect())
 
     def mousePressEvent(self, event):
-        if event.button() == Qt.MouseButton.LeftButton and event.position().y() <= 38:
+        if event.button() == Qt.MouseButton.LeftButton and event.position().y() <= 36:
             self._drag_active = True
             self._drag_offset = event.globalPosition().toPoint() - self.frameGeometry().topLeft()
             event.accept()
@@ -645,7 +577,7 @@ class MainWindow(QMainWindow):
         super().mouseReleaseEvent(event)
 
     def mouseDoubleClickEvent(self, event):
-        if event.button() == Qt.MouseButton.LeftButton and event.position().y() <= 38:
+        if event.button() == Qt.MouseButton.LeftButton and event.position().y() <= 36:
             self._toggle_maximize_restore()
             event.accept()
             return
@@ -658,15 +590,12 @@ class MainWindow(QMainWindow):
 def main():
     app = QApplication(sys.argv)
     app.setStyleSheet(DarkCharcoalStyle.stylesheet())
-
     font = QFont("Segoe UI", 10)
     font.setStyleHint(QFont.StyleHint.SansSerif)
     app.setFont(font)
-
     window = MainWindow()
     window.show()
     sys.exit(app.exec())
-
 
 if __name__ == "__main__":
     main()
