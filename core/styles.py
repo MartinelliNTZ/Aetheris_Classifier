@@ -2,104 +2,103 @@
 """
 Sistema Centralizado de Estilos — Aetheris Classifier v6
 =========================================================
-Paleta de cores, sombras, gradientes e métodos de estilo QSS.
-Toda a identidade visual da aplicacao é controlada aqui.
+Design: Minimalista Dark Charcoal + Gold com profundidade via sombras.
+
+Conceito:
+- Sem bordas visíveis nos cards/containers
+- Profundidade criada com cores de fundo em cascata (mais escuro atrás)
+- Sombras sutis via gradientes e sobreposições
+- Tipografia levemente ampliada (+1px) para melhor legibilidade
+- Acento ouro para interatividade
 """
 
 from __future__ import annotations
 from typing import Optional
 
 
-# ═══════════════════════════════════════════════════════════════════════════
-# PALETA DE CORES — Teoria: fundo escuro (análogo preto) + acentos dourados
-# (complementares ao preto: tons de ouro/warm) + toques azul/verde para info
-# ═══════════════════════════════════════════════════════════════════════════
-
 class Palette:
-    """Paleta completa com cores base, superfície, texto, acentos e status."""
+    """
+    Paleta com 6 níveis de profundidade.
+    BG_DEEPEST (fundo mais escuro) → BG_SURFACE (superfície mais clara)
+    """
 
-    # ── Fundos ──────────────────────────────────────────────────────────
-    DARK_BG        = "#0D0D0D"      # Fundo mais profundo (quase preto)
-    PANEL_BG       = "#1A1A1E"      # Painéis / GroupBox
-    CARD_BG        = "#222226"      # Cards / hover / dropdowns
-    INPUT_BG       = "#2A2A2E"      # Inputs / campos de texto
-    TITLE_BAR_BG   = "#151518"      # Barra de título
+    # ── Fundos (profundidade: 0 = mais fundo, 5 = mais alto) ───────────
+    BG_DEEPEST     = "#08080A"      # Nível 0: fundo absoluto
+    BG_DARK        = "#0C0C0F"      # Nível 1: fundo padrão
+    BG_PANEL       = "#121216"      # Nível 2: painéis base
+    BG_CARD        = "#18181D"      # Nível 3: cards / groupbox
+    BG_ELEVATED    = "#1E1E24"      # Nível 4: elementos elevados
+    BG_SURFACE     = "#24242B"      # Nível 5: superfície (hover, focus)
+    TITLE_BAR_BG   = "#0A0A0D"      # Barra de título
 
-    # ── Bordas ──────────────────────────────────────────────────────────
-    BORDER         = "#3A3A3E"      # Borda padrão sutil
-    BORDER_LIGHT   = "#4A4A4E"      # Borda hover
-    BORDER_FOCUS   = "#C9A84C"      # Borda focus (ouro)
+    # ── Sombras (simulam box-shadow via gradientes) ────────────────────
+    SHADOW         = "#040405"      # Sombra escura sutil
+    SHADOW_DEEP    = "#000000"      # Sombra profunda
+    GLOW           = "#C9A84C15"    # Brilho dourado fraco (~8%)
+    GLOW_STRONG    = "#C9A84C25"    # Brilho dourado médio (~15%)
+
+    # ── Bordas (mínimas, quase invisíveis) ─────────────────────────────
+    BORDER          = "#2A2A30"     # Borda sutil (quase imperceptível)
+    BORDER_HOVER    = "#C9A84C"     # Borda hover dourada
+    DIVIDER         = "#1A1A20"     # Separador / gridline
 
     # ── Texto ───────────────────────────────────────────────────────────
-    TEXT_PRIMARY   = "#EAEAEA"      # Texto principal (quase branco)
-    TEXT_SECONDARY = "#9A9A9E"      # Texto secundário / subtítulo
-    TEXT_MUTED     = "#6A6A6E"      # Texto desabilitado / placeholder
-    TEXT_GOLD      = "#C9A84C"      # Texto dourado
+    TEXT_BRIGHT     = "#F0F0F0"     # Títulos / destaque
+    TEXT_PRIMARY    = "#DCDCDC"     # Corpo
+    TEXT_SECONDARY  = "#888890"     # Subtítulo / secundário
+    TEXT_MUTED      = "#585860"     # Placeholder / desabilitado
+    TEXT_GOLD       = "#C9A84C"     # Dourado
+    TEXT_GOLD_BRIGHT = "#E0C878"   # Dourado hover
 
     # ── Acento Ouro ─────────────────────────────────────────────────────
-    GOLD           = "#C9A84C"      # Ouro principal
-    GOLD_HOVER     = "#DDBE5A"      # Ouro hover
-    GOLD_PRESSED   = "#A88A30"      # Ouro pressionado
-    GOLD_GRADIENT_START = "#C9A84C"
-    GOLD_GRADIENT_END   = "#B8963A"
-    GOLD_LIGHT     = "#E8D08A"      # Ouro claro (brilho)
+    GOLD            = "#C9A84C"
+    GOLD_HOVER      = "#D4B85A"
+    GOLD_ACTIVE     = "#B8983E"
+    GOLD_DIM        = "#8A7A3A"
+    GOLD_LIGHT      = "#E8D08A"
+    GOLD_GRADIENT   = ("#C9A84C", "#B8963A")
 
     # ── Status ──────────────────────────────────────────────────────────
-    SUCCESS        = "#4CAF50"      # Verde sucesso
-    SUCCESS_HOVER  = "#66BB6A"
-    WARNING        = "#FF9800"      # Laranja aviso
-    WARNING_HOVER  = "#FFB74D"
-    DANGER         = "#E53935"      # Vermelho erro
-    DANGER_HOVER   = "#EF5350"
-    INFO           = "#42A5F5"      # Azul info
-    INFO_HOVER     = "#64B5F6"
+    SUCCESS         = "#43A047"
+    SUCCESS_HOVER   = "#66BB6A"
+    SUCCESS_DIM     = "#2E7D32"
+    WARNING         = "#EF9A00"
+    WARNING_HOVER   = "#FFB74D"
+    WARNING_DIM     = "#BF6E00"
+    DANGER          = "#D32F2F"
+    DANGER_HOVER    = "#E53935"
+    DANGER_DIM      = "#A02020"
 
-    # ── Sombras (box-shadow simuladas com gradientes/cores) ─────────────
-    SHADOW_COLOR   = "#080808"
-    GLOW_GOLD      = "#C9A84C33"    # Brilho dourado com 20% opacidade
-    GLOW_GOLD_HOVER = "#C9A84C44"   # Brilho hover 27%
-
-
-# ═══════════════════════════════════════════════════════════════════════════
-# CLASSE PRINCIPAL DE ESTILOS
-# ═══════════════════════════════════════════════════════════════════════════
 
 class AppStyles:
-    """Centraliza toda a folha de estilos QSS e métodos auxiliares."""
+    """Estilos QSS centralizados."""
 
-    # Alias para acesso rapido as cores
     P = Palette
-
-    # ────────────────────────────────────────────────────────────────────
-    # QSS GLOBAL — Aplicado via setStyleSheet na aplicacao
-    # ────────────────────────────────────────────────────────────────────
 
     @classmethod
     def global_stylesheet(cls) -> str:
         p = cls.P
         return f"""
-        /* ===== GLOBAL ===== */
         QMainWindow, QWidget {{
-            background-color: {p.DARK_BG};
+            background-color: {p.BG_DARK};
             color: {p.TEXT_PRIMARY};
-            font-family: 'Segoe UI', 'Roboto', sans-serif;
+            font-family: 'Segoe UI', 'Inter', 'Roboto', sans-serif;
             font-size: 13px;
         }}
 
-        /* ===== SCROLL AREA ===== */
         QScrollArea {{
             border: none;
-            background-color: transparent;
+            background: transparent;
         }}
         QScrollBar:vertical {{
-            background: {p.DARK_BG};
-            width: 8px;
+            background: {p.BG_DARK};
+            width: 6px;
             margin: 0;
         }}
         QScrollBar::handle:vertical {{
-            background: {p.BORDER};
-            border-radius: 4px;
-            min-height: 30px;
+            background: {p.BG_ELEVATED};
+            border-radius: 3px;
+            min-height: 28px;
         }}
         QScrollBar::handle:vertical:hover {{
             background: {p.GOLD};
@@ -107,20 +106,11 @@ class AppStyles:
         QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {{
             height: 0;
         }}
-        QScrollBar:horizontal {{
-            background: {p.DARK_BG};
-            height: 8px;
-        }}
-        QScrollBar::handle:horizontal {{
-            background: {p.BORDER};
-            border-radius: 4px;
-            min-width: 30px;
-        }}
 
         /* ===== GROUP BOX ===== */
         QGroupBox {{
-            background-color: {p.PANEL_BG};
-            border: 1px solid {p.BORDER};
+            background-color: {p.BG_CARD};
+            border: none;
             border-radius: 10px;
             margin-top: 8px;
             padding: 16px 10px 10px 10px;
@@ -130,13 +120,13 @@ class AppStyles:
             subcontrol-origin: padding;
             subcontrol-position: top left;
             left: 4px;
-            top: 1px;
+            top: -2px;
             padding: 0 6px;
             color: {p.TEXT_GOLD};
             font-weight: 700;
             font-size: 12px;
             letter-spacing: 0.5px;
-            background-color: {p.PANEL_BG};
+            background-color: {p.BG_CARD};
             border-radius: 4px;
         }}
 
@@ -146,9 +136,9 @@ class AppStyles:
             color: {p.TEXT_PRIMARY};
         }}
         QLabel#header_title {{
-            font-size: 22px;
+            font-size: 21px;
             font-weight: 700;
-            color: {p.TEXT_PRIMARY};
+            color: {p.TEXT_BRIGHT};
             letter-spacing: 1px;
         }}
         QLabel#header_subtitle {{
@@ -157,38 +147,38 @@ class AppStyles:
         }}
         QLabel#section_badge {{
             background-color: {p.GOLD};
-            color: {p.DARK_BG};
-            border-radius: 5px;
+            color: {p.BG_DEEPEST};
+            border-radius: 4px;
             padding: 3px 12px;
             font-size: 10px;
-            font-weight: 700;
+            font-weight: 800;
+            letter-spacing: 0.3px;
         }}
 
         /* ===== TITLE BAR ===== */
         QWidget#title_bar {{
             background-color: {p.TITLE_BAR_BG};
-            border-bottom: 1px solid {p.BORDER};
+            border-bottom: 1px solid {p.BG_PANEL};
         }}
         QLabel#window_title {{
-            color: {p.TEXT_SECONDARY};
+            color: {p.TEXT_MUTED};
             font-size: 11px;
             font-weight: 600;
             letter-spacing: 0.3px;
         }}
         QPushButton#title_btn, QPushButton#title_btn_close {{
             background: transparent;
-            color: {p.TEXT_SECONDARY};
+            color: {p.TEXT_MUTED};
             border: none;
-            border-radius: 4px;
-            min-width: 30px;
-            max-width: 30px;
-            min-height: 24px;
-            max-height: 24px;
-            font-size: 12px;
-            font-weight: 600;
+            border-radius: 3px;
+            min-width: 28px;
+            max-width: 28px;
+            min-height: 22px;
+            max-height: 22px;
+            font-size: 11px;
         }}
         QPushButton#title_btn:hover {{
-            background-color: {p.CARD_BG};
+            background-color: {p.BG_CARD};
             color: {p.TEXT_PRIMARY};
         }}
         QPushButton#title_btn_close:hover {{
@@ -198,43 +188,38 @@ class AppStyles:
 
         /* ===== LINE EDIT ===== */
         QLineEdit {{
-            background-color: {p.INPUT_BG};
-            border: 1px solid {p.BORDER};
+            background-color: {p.BG_ELEVATED};
+            border: none;
             border-radius: 6px;
-            padding: 4px 8px;
+            padding: 2px;
             color: {p.TEXT_PRIMARY};
             selection-background-color: {p.GOLD};
-            selection-color: {p.DARK_BG};
+            selection-color: {p.BG_DEEPEST};
         }}
         QLineEdit:focus {{
-            border: 1px solid {p.GOLD};
-            background-color: {p.CARD_BG};
+            background-color: {p.BG_SURFACE};
         }}
         QLineEdit:disabled {{
-            background-color: {p.CARD_BG};
+            background-color: {p.BG_CARD};
             color: {p.TEXT_MUTED};
-        }}
-        QLineEdit[readOnly="true"] {{
-            background-color: {p.CARD_BG};
-            color: {p.TEXT_SECONDARY};
         }}
 
         /* ===== SPIN BOX ===== */
         QSpinBox, QDoubleSpinBox {{
-            background-color: {p.INPUT_BG};
-            border: 1px solid {p.BORDER};
+            background-color: {p.BG_ELEVATED};
+            border: none;
             border-radius: 6px;
             padding: 3px 8px;
             color: {p.TEXT_PRIMARY};
         }}
         QSpinBox:focus, QDoubleSpinBox:focus {{
-            border: 1px solid {p.GOLD};
+            background-color: {p.BG_SURFACE};
         }}
         QSpinBox::up-button, QDoubleSpinBox::up-button,
         QSpinBox::down-button, QDoubleSpinBox::down-button {{
-            width: 18px;
-            background: {p.CARD_BG};
-            border-radius: 3px;
+            width: 16px;
+            background: {p.BG_CARD};
+            border-radius: 2px;
             margin: 1px;
         }}
         QSpinBox::up-button:hover, QDoubleSpinBox::up-button:hover,
@@ -244,41 +229,41 @@ class AppStyles:
 
         /* ===== COMBO BOX ===== */
         QComboBox {{
-            background-color: {p.INPUT_BG};
-            border: 1px solid {p.BORDER};
+            background-color: {p.BG_ELEVATED};
+            border: none;
             border-radius: 6px;
             padding: 3px 8px;
             color: {p.TEXT_PRIMARY};
-            min-width: 100px;
+            min-width: 80px;
         }}
         QComboBox:focus {{
-            border: 1px solid {p.GOLD};
+            background-color: {p.BG_SURFACE};
         }}
         QComboBox:disabled {{
-            background-color: {p.CARD_BG};
+            background-color: {p.BG_CARD};
             color: {p.TEXT_MUTED};
         }}
         QComboBox::drop-down {{
             subcontrol-origin: padding;
             subcontrol-position: top right;
-            width: 24px;
-            border-left: 1px solid {p.BORDER};
+            width: 22px;
+            border-left: 1px solid {p.BG_ELEVATED};
             border-top-right-radius: 6px;
             border-bottom-right-radius: 6px;
         }}
         QComboBox::down-arrow {{
             image: none;
-            border-left: 5px solid transparent;
-            border-right: 5px solid transparent;
-            border-top: 6px solid {p.TEXT_SECONDARY};
+            border-left: 4px solid transparent;
+            border-right: 4px solid transparent;
+            border-top: 5px solid {p.TEXT_SECONDARY};
         }}
         QComboBox QAbstractItemView {{
-            background-color: {p.CARD_BG};
-            border: 1px solid {p.BORDER};
+            background-color: {p.BG_CARD};
+            border: none;
             border-radius: 4px;
             color: {p.TEXT_PRIMARY};
             selection-background-color: {p.GOLD};
-            selection-color: {p.DARK_BG};
+            selection-color: {p.BG_DEEPEST};
             outline: none;
         }}
 
@@ -289,203 +274,199 @@ class AppStyles:
             color: {p.TEXT_PRIMARY};
         }}
         QCheckBox::indicator {{
-            width: 18px;
-            height: 18px;
-            border-radius: 4px;
-            border: 1px solid {p.BORDER};
-            background-color: {p.INPUT_BG};
+            width: 16px;
+            height: 16px;
+            border-radius: 3px;
+            background-color: {p.BG_ELEVATED};
         }}
         QCheckBox::indicator:checked {{
             background-color: {p.GOLD};
-            border: 1px solid {p.GOLD};
         }}
         QCheckBox::indicator:hover {{
-            border: 1px solid {p.GOLD};
+            background-color: {p.BG_SURFACE};
         }}
 
         /* ===== TABLE ===== */
         QTableWidget {{
-            background-color: {p.INPUT_BG};
-            border: 1px solid {p.BORDER};
+            background-color: {p.BG_ELEVATED};
+            border: none;
             border-radius: 8px;
-            gridline-color: {p.BORDER};
+            gridline-color: {p.DIVIDER};
             color: {p.TEXT_PRIMARY};
         }}
         QTableWidget::item {{
             padding: 3px 6px;
-            border-bottom: 1px solid {p.BORDER};
         }}
         QTableWidget::item:selected {{
             background-color: {p.GOLD};
-            color: {p.DARK_BG};
+            color: {p.BG_DEEPEST};
         }}
         QHeaderView::section {{
-            background-color: {p.CARD_BG};
+            background-color: {p.BG_CARD};
             color: {p.TEXT_SECONDARY};
             padding: 4px 6px;
             border: none;
             border-bottom: 2px solid {p.GOLD};
             font-weight: 700;
             font-size: 11px;
+            letter-spacing: 0.3px;
         }}
 
         /* ===== TEXT BROWSER / TEXT EDIT ===== */
         QTextBrowser, QTextEdit {{
-            background-color: {p.INPUT_BG};
-            border: 1px solid {p.BORDER};
+            background-color: {p.BG_ELEVATED};
+            border: none;
             border-radius: 8px;
             color: {p.TEXT_PRIMARY};
             font-family: 'Consolas', 'Courier New', monospace;
-            font-size: 11px;
+            font-size: 12px;
             padding: 8px;
             selection-background-color: {p.GOLD};
-            selection-color: {p.DARK_BG};
+            selection-color: {p.BG_DEEPEST};
         }}
 
         /* ===== PROGRESS BAR ===== */
         QProgressBar {{
             border: none;
-            border-radius: 6px;
-            background-color: {p.INPUT_BG};
+            border-radius: 5px;
+            background-color: {p.BG_PANEL};
             text-align: center;
             color: {p.TEXT_PRIMARY};
             font-weight: 700;
-            font-size: 12px;
+            font-size: 11px;
+            height: 18px;
         }}
         QProgressBar::chunk {{
-            border-radius: 6px;
+            border-radius: 5px;
             background: qlineargradient(
                 x1:0, y1:0, x2:1, y2:0,
-                stop:0 {p.GOLD_GRADIENT_START},
-                stop:1 {p.GOLD_GRADIENT_END}
+                stop:0 {p.GOLD_GRADIENT[0]},
+                stop:1 {p.GOLD_GRADIENT[1]}
             );
         }}
         """
 
     # ────────────────────────────────────────────────────────────────────
-    # MÉTODOS AUXILIARES — Estilos inline para widgets específicos
+    # BOTÕES
     # ────────────────────────────────────────────────────────────────────
 
     @classmethod
     def btn_secondary_style(cls) -> str:
-        """Botao secundario padrao (config, acoes laterais)."""
+        """Botao secundario — sem borda, fundo elevado, hover com glow."""
         p = cls.P
         return (
             f"QPushButton {{"
-            f"  background-color: {p.CARD_BG};"
+            f"  background-color: {p.BG_CARD};"
             f"  color: {p.TEXT_GOLD};"
-            f"  border: 1px solid {p.BORDER};"
+            f"  border: none;"
             f"  border-radius: 6px;"
             f"  padding: 6px 14px;"
             f"  font-weight: 600;"
             f"  font-size: 11px;"
             f"}}"
             f"QPushButton:hover {{"
-            f"  background-color: {p.INPUT_BG};"
-            f"  border-color: {p.GOLD};"
-            f"  color: {p.GOLD_HOVER};"
+            f"  background-color: {p.BG_ELEVATED};"
+            f"  color: {p.TEXT_GOLD_BRIGHT};"
             f"}}"
             f"QPushButton:pressed {{"
-            f"  background-color: {p.DARK_BG};"
+            f"  background-color: {p.BG_PANEL};"
             f"}}"
         )
 
     @classmethod
     def btn_primary_style(cls) -> str:
-        """Botao primario (EXECUTAR PIPELINE)."""
+        """Botao primario — gradiente ouro, sem borda."""
         p = cls.P
         return (
             f"QPushButton {{"
             f"  background: qlineargradient(x1:0,y1:0,x2:1,y2:0,"
-            f"    stop:0 {p.GOLD_GRADIENT_START}, stop:1 {p.GOLD_GRADIENT_END});"
-            f"  color: {p.DARK_BG};"
+            f"    stop:0 {p.GOLD_GRADIENT[0]}, stop:1 {p.GOLD_GRADIENT[1]});"
+            f"  color: {p.BG_DEEPEST};"
             f"  border: none;"
             f"  border-radius: 6px;"
             f"  padding: 6px 20px;"
             f"  font-weight: 800;"
             f"  font-size: 13px;"
+            f"  letter-spacing: 0.5px;"
             f"}}"
             f"QPushButton:hover {{"
             f"  background: qlineargradient(x1:0,y1:0,x2:1,y2:0,"
             f"    stop:0 {p.GOLD_HOVER}, stop:1 {p.GOLD});"
             f"}}"
             f"QPushButton:pressed {{"
-            f"  background: {p.GOLD_PRESSED};"
+            f"  background: {p.GOLD_ACTIVE};"
             f"}}"
             f"QPushButton:disabled {{"
-            f"  background-color: {p.CARD_BG};"
+            f"  background-color: {p.BG_CARD};"
             f"  color: {p.TEXT_MUTED};"
-            f"  border: 1px solid {p.BORDER};"
             f"}}"
         )
 
     @classmethod
     def btn_danger_style(cls) -> str:
-        """Botao de perigo (CANCELAR)."""
+        """Botao danger — vermelho escuro, sem borda."""
         p = cls.P
         return (
             f"QPushButton {{"
-            f"  background: qlineargradient(x1:0,y1:0,x2:1,y2:0,"
-            f"    stop:0 {p.DANGER}, stop:1 {p.DANGER_HOVER});"
+            f"  background-color: {p.DANGER_DIM};"
             f"  color: white;"
             f"  border: none;"
             f"  border-radius: 6px;"
             f"  padding: 6px 14px;"
             f"  font-weight: 700;"
             f"  font-size: 11px;"
+            f"  letter-spacing: 0.3px;"
             f"}}"
             f"QPushButton:hover {{"
-            f"  background-color: {p.DANGER_HOVER};"
+            f"  background-color: {p.DANGER};"
             f"}}"
             f"QPushButton:pressed {{"
-            f"  background-color: #C62828;"
+            f"  background-color: {p.DANGER_DIM};"
             f"}}"
             f"QPushButton:disabled {{"
-            f"  background-color: {p.CARD_BG};"
+            f"  background-color: {p.BG_CARD};"
             f"  color: {p.TEXT_MUTED};"
-            f"  border: 1px solid {p.BORDER};"
             f"}}"
         )
 
     @classmethod
     def btn_ghost_style(cls) -> str:
-        """Botao fantasma (adicionar shapefile, listar modelos)."""
+        """Botao ghost — invisível, aparece no hover."""
         p = cls.P
         return (
             f"QPushButton {{"
             f"  background-color: transparent;"
             f"  color: {p.TEXT_GOLD};"
-            f"  border: 1px solid {p.BORDER};"
+            f"  border: none;"
             f"  border-radius: 5px;"
             f"  padding: 4px 12px;"
             f"  font-weight: 600;"
             f"  font-size: 11px;"
             f"}}"
             f"QPushButton:hover {{"
-            f"  background-color: {p.CARD_BG};"
-            f"  border-color: {p.GOLD};"
+            f"  background-color: {p.BG_CARD};"
             f"}}"
             f"QPushButton:pressed {{"
-            f"  background-color: {p.INPUT_BG};"
+            f"  background-color: {p.BG_PANEL};"
             f"}}"
         )
 
     # ────────────────────────────────────────────────────────────────────
-    # ESTILOS DE BADGE
+    # BADGES
     # ────────────────────────────────────────────────────────────────────
 
     @classmethod
     def badge_style(cls, bg_color: str, text_color: Optional[str] = None) -> str:
-        """Gera estilo QSS para um badge."""
-        tc = text_color or cls.P.DARK_BG
+        tc = text_color or cls.P.BG_DEEPEST
         return (
             f"QLabel {{"
             f"  background-color: {bg_color};"
             f"  color: {tc};"
-            f"  border-radius: 5px;"
+            f"  border-radius: 4px;"
             f"  padding: 3px 12px;"
-            f"  font-weight: 700;"
+            f"  font-weight: 800;"
             f"  font-size: 10px;"
+            f"  letter-spacing: 0.3px;"
             f"}}"
         )
 
@@ -506,34 +487,34 @@ class AppStyles:
         return cls.badge_style(cls.P.WARNING)
 
     # ────────────────────────────────────────────────────────────────────
-    # ESTILOS PARA O CONSOLE (log)
+    # LOG HTML
     # ────────────────────────────────────────────────────────────────────
 
     @classmethod
     def log_html(cls, text: str, timestamp: str,
                  color: str, ts_color: str, weight: str = "400") -> str:
-        """Formata uma linha de log em HTML para o QTextBrowser."""
         return (
-            f"<span style='color:{ts_color}; font-family:Consolas,\"Courier New\",monospace; "
-            f"font-size:11px; font-weight:500;'>[{timestamp}]</span> "
-            f"<span style='color:{color}; font-family:Consolas,\"Courier New\",monospace; "
-            f"font-size:12px; font-weight:{weight};'>{text}</span>"
+            f"<span style='color:{ts_color};"
+            f"font-family:Consolas,\"Courier New\",monospace;"
+            f"font-size:11px;font-weight:500;'>[{timestamp}]</span> "
+            f"<span style='color:{color};"
+            f"font-family:Consolas,\"Courier New\",monospace;"
+            f"font-size:12px;font-weight:{weight};'>{text}</span>"
         )
 
     @classmethod
     def log_link_html(cls, text: str, url: str) -> str:
-        """Formata um link no console."""
         return (
-            f"<span style='color:{cls.P.TEXT_SECONDARY}; "
-            f"font-family:Consolas,\"Courier New\",monospace; font-size:12px;'>"
-            f"{text}: <a href='{url}' style='color:{cls.P.INFO};'>abrir</a></span>"
+            f"<span style='color:{cls.P.TEXT_SECONDARY};"
+            f"font-family:Consolas,\"Courier New\",monospace;font-size:12px;'>"
+            f"{text}: <a href='{url}' style='color:{cls.P.GOLD};"
+            f"text-decoration:none;'>abrir</a></span>"
         )
 
     @classmethod
     def log_section_html(cls, text: str) -> str:
-        """Formata um cabecalho de secao no console."""
         return (
-            f"<span style='color:{cls.P.INFO}; "
-            f"font-family:Consolas,\"Courier New\",monospace; font-size:12px; font-weight:600;'>"
-            f">{text}</span>"
+            f"<span style='color:{cls.P.GOLD};"
+            f"font-family:Consolas,\"Courier New\",monospace;"
+            f"font-size:12px;font-weight:700;'>{text}</span>"
         )

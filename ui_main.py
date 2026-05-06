@@ -109,16 +109,6 @@ class MainWindow(QMainWindow):
     def _make_group_box(self, title: str) -> QGroupBox:
         """Cria um GroupBox com titulo DENTRO do box (nao sobre a borda)."""
         gb = QGroupBox(title)
-        gb.setStyleSheet(
-            "QGroupBox {"
-            "  font-weight: 700;"
-            f"  color: {Palette.GOLD};"
-            f"  border: 1px solid {Palette.BORDER};"
-            "  border-radius: 6px;"
-            "  margin-top: 8px;"
-            "  padding: 18px 10px 10px 10px;"
-            "}"
-        )
         return gb
 
     def _build_ui(self):
