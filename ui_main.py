@@ -1,9 +1,9 @@
 ﻿# -*- coding: utf-8 -*-
 """
-UI Profissional Dark Charcoal â€” Aetheris Classifier v6
+UI Profissional Dark Charcoal — Aetheris Classifier v6
 ===============================================================
 Interface premium em PySide6 para o pipeline main6_multcore.py.
-Apenas UI (frontend); a lÃ³gica de execucao sera integrada posteriormente.
+Apenas UI (frontend); a logica de execucao sera integrada posteriormente.
 """
 
 import sys
@@ -22,10 +22,9 @@ from core.hud_loader import HudCircularRingsLoader
 from core.main_controller import MainController
 from core.ui_field_specs import UI_FIELD_SPECS
 
-
-# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+# =============================================================================
 # WIDGETS AUXILIARES
-# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+# =============================================================================
 
 class Badge(QLabel):
     """Badge estilizado tipo tag premium."""
@@ -96,10 +95,9 @@ class PathBrowseRow(QWidget):
     def path(self) -> str:
         return self.edit.text().strip()
 
-
-# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+# =============================================================================
 # JANELA PRINCIPAL
-# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+# =============================================================================
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -107,7 +105,9 @@ class MainWindow(QMainWindow):
         self.setWindowTitle("Aetheris Classifier v6 Premium")
         self.setWindowFlags(Qt.WindowType.FramelessWindowHint | Qt.WindowType.Window)
         self.setMinimumSize(1280, 860)
-        self.setWindowIcon(QIcon("Aetheris.png"))
+        icon_path = Path(__file__).parent / "Aetheris.png"
+        if icon_path.exists():
+            self.setWindowIcon(QIcon(str(icon_path)))
         self.resize(1440, 900)
         self._drag_active = False
         self._drag_offset = QPoint()
@@ -175,7 +175,7 @@ class MainWindow(QMainWindow):
 
         self.lbl_subtitle = QLabel(
             "Pipeline de classificacao supervisionada com redes neurais profundas "
-            "â€” extracao espectral, treinamento multicore e exportacao GeoTIFF."
+            "— extracao espectral, treinamento multicore e exportacao GeoTIFF."
         )
         self.lbl_subtitle.setObjectName("header_subtitle")
         self.lbl_subtitle.setWordWrap(True)
@@ -201,7 +201,7 @@ class MainWindow(QMainWindow):
         main_layout.addWidget(header)
         main_layout.addWidget(Separator())
 
-        # CORPO â€” Splitter esquerda / direita
+        # CORPO — Splitter esquerda / direita
         splitter = QSplitter(Qt.Orientation.Horizontal)
 
         # Painel Esquerdo
@@ -357,7 +357,7 @@ class MainWindow(QMainWindow):
         lay_treino.addLayout(grid_treino)
         left_layout.addWidget(grp_treino)
 
-        # Grupo: Hardware & Mascara
+        # Grupo: Hardware e Mascara
         grp_hw = QGroupBox("Hardware e Pre-processamento")
         lay_hw = QVBoxLayout(grp_hw)
         lay_hw.setSpacing(8)
@@ -440,7 +440,6 @@ class MainWindow(QMainWindow):
         # Painel Direito
         right_panel = QWidget()
         right_layout = QVBoxLayout(right_panel)
-        right_layout.setContentsMargins(0, 0, 0, 0)
         right_layout.setContentsMargins(0, 12, 0, 0)
         right_layout.setSpacing(6)
 
@@ -492,7 +491,7 @@ class MainWindow(QMainWindow):
         self.progress = QProgressBar()
         self.progress.setValue(0)
         self.progress.setTextVisible(True)
-        self.progress.setFormat(" %p% â€” aguardando... ")
+        self.progress.setFormat(" %p% — aguardando... ")
         right_layout.addWidget(self.progress)
 
         action_bar = QWidget()
@@ -568,7 +567,7 @@ class MainWindow(QMainWindow):
             for widget in widgets:
                 widget.setToolTip(desc)
 
-    def _add_shp_row(self, path: str, classe: int):
+    def _add_shp_row(self, path: str, classe: int, legenda: str = ""):
         row = self.table_shp.rowCount()
         self.table_shp.insertRow(row)
 
@@ -582,22 +581,28 @@ class MainWindow(QMainWindow):
         spin_cls.setStyleSheet("background-color: transparent; border: none;")
         self.table_shp.setCellWidget(row, 1, spin_cls)
 
+        edit_legenda = QLineEdit(legenda)
+        edit_legenda.setPlaceholderText("Ex: Floresta, Urbano...")
+        edit_legenda.setStyleSheet("background-color: transparent; border: none;")
+        self.table_shp.setCellWidget(row, 2, edit_legenda)
+
         btn_rem = QPushButton("Remover")
         btn_rem.setObjectName("btn_danger")
         btn_rem.setCursor(Qt.CursorShape.PointingHandCursor)
-        btn_rem.clicked.connect(lambda _, r=row: self._remove_shp_row(r))
-        self.table_shp.setCellWidget(row, 2, btn_rem)
+        btn_rem.clicked.connect(lambda checked, r=row: self._remove_shp_row(r))
+        self.table_shp.setCellWidget(row, 3, btn_rem)
 
     def _remove_shp_row(self, row: int):
         self.table_shp.removeRow(row)
+        # Reindexa os lambdas dos botoes de remover nas linhas restantes
         for r in range(self.table_shp.rowCount()):
-            btn = self.table_shp.cellWidget(r, 2)
+            btn = self.table_shp.cellWidget(r, 3)
             if btn:
                 try:
                     btn.clicked.disconnect()
                 except Exception:
                     pass
-                btn.clicked.connect(lambda _, nr=r: self._remove_shp_row(nr))
+                btn.clicked.connect(lambda checked, fixed_row=r: self._remove_shp_row(fixed_row))
 
     def _toggle_maximize_restore(self):
         if self.isMaximized():
@@ -607,7 +612,7 @@ class MainWindow(QMainWindow):
         else:
             self.showMaximized()
             if hasattr(self, "btn_max"):
-                self.btn_max.setText("\u29C9")   # ❐
+                self.btn_max.setText("\u29C9")
 
     def resizeEvent(self, event):
         super().resizeEvent(event)
@@ -640,10 +645,9 @@ class MainWindow(QMainWindow):
             return
         super().mouseDoubleClickEvent(event)
 
-
-# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+# =============================================================================
 # PONTO DE ENTRADA
-# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+# =============================================================================
 
 def main():
     app = QApplication(sys.argv)
@@ -660,5 +664,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-    
-
