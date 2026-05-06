@@ -4,7 +4,7 @@ from PySide6.QtCore import Qt, QTimer, QRectF
 from PySide6.QtGui import QColor, QFont, QLinearGradient, QPainter, QPainterPath, QPen
 from PySide6.QtWidgets import QWidget
 
-from .dark_charcoal_style import DarkCharcoalStyle
+from .styles import DarkCharcoalStyle
 
 
 class HudCircularRingsLoader(QWidget):

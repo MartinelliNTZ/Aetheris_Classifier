@@ -518,3 +518,32 @@ class AppStyles:
             f"font-family:Consolas,\"Courier New\",monospace;"
             f"font-size:12px;font-weight:700;'>{text}</span>"
         )
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# COMPATIBILIDADE RETROATIVA — DarkCharcoalStyle (legado)
+# Mantido para nao quebrar imports de launcher.py, hud_loader.py, etc.
+# Mapeia constantes antigas para as novas do Palette.
+# ═══════════════════════════════════════════════════════════════════════════
+
+class DarkCharcoalStyle:
+    """Classe de compatibilidade legada. Usar AppStyles ou Palette diretamente."""
+
+    DARK_BG        = Palette.BG_DARK
+    PANEL_BG       = Palette.BG_PANEL
+    CARD_BG        = Palette.BG_CARD
+    INPUT_BG       = Palette.BG_ELEVATED
+    BORDER         = Palette.BORDER
+    TEXT_PRIMARY   = Palette.TEXT_PRIMARY
+    TEXT_SECONDARY = Palette.TEXT_SECONDARY
+    ACCENT_GOLD    = Palette.GOLD
+    ACCENT_HOVER   = Palette.GOLD_HOVER
+    SUCCESS        = Palette.SUCCESS
+    WARNING        = Palette.WARNING
+    DANGER         = Palette.DANGER
+    INFO           = "#5B9BD5"
+
+    @classmethod
+    def stylesheet(cls) -> str:
+        """Retorna o stylesheet global (delega para AppStyles)."""
+        return AppStyles.global_stylesheet()
