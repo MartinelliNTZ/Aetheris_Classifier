@@ -1,9 +1,9 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 """
-UI Profissional Dark Charcoal — Aetheris Classifier v6
+UI Profissional Dark Charcoal â€” Aetheris Classifier v6
 ===============================================================
 Interface premium em PySide6 para o pipeline main6_multcore.py.
-Apenas UI (frontend); a lógica de execucao sera integrada posteriormente.
+Apenas UI (frontend); a lÃ³gica de execucao sera integrada posteriormente.
 """
 
 import sys
@@ -20,11 +20,12 @@ from PySide6.QtGui import QFont, QIcon
 from core.dark_charcoal_style import DarkCharcoalStyle
 from core.hud_loader import HudCircularRingsLoader
 from core.main_controller import MainController
+from core.ui_field_specs import UI_FIELD_SPECS
 
 
-# ═══════════════════════════════════════════════════════════════════════════
+# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 # WIDGETS AUXILIARES
-# ═══════════════════════════════════════════════════════════════════════════
+# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 class Badge(QLabel):
     """Badge estilizado tipo tag premium."""
@@ -96,9 +97,9 @@ class PathBrowseRow(QWidget):
         return self.edit.text().strip()
 
 
-# ═══════════════════════════════════════════════════════════════════════════
+# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 # JANELA PRINCIPAL
-# ═══════════════════════════════════════════════════════════════════════════
+# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -131,17 +132,17 @@ class MainWindow(QMainWindow):
         title_layout.addWidget(self.lbl_window_title)
         title_layout.addStretch()
 
-        self.btn_min = QPushButton("—")
+        self.btn_min = QPushButton("â€”")
         self.btn_min.setObjectName("title_btn")
         self.btn_min.clicked.connect(self.showMinimized)
         title_layout.addWidget(self.btn_min)
 
-        self.btn_max = QPushButton("□")
+        self.btn_max = QPushButton("â–¡")
         self.btn_max.setObjectName("title_btn")
         self.btn_max.clicked.connect(self._toggle_maximize_restore)
         title_layout.addWidget(self.btn_max)
 
-        self.btn_close = QPushButton("✕")
+        self.btn_close = QPushButton("âœ•")
         self.btn_close.setObjectName("title_btn_close")
         self.btn_close.clicked.connect(self.close)
         title_layout.addWidget(self.btn_close)
@@ -174,7 +175,7 @@ class MainWindow(QMainWindow):
 
         self.lbl_subtitle = QLabel(
             "Pipeline de classificacao supervisionada com redes neurais profundas "
-            "— extracao espectral, treinamento multicore e exportacao GeoTIFF."
+            "â€” extracao espectral, treinamento multicore e exportacao GeoTIFF."
         )
         self.lbl_subtitle.setObjectName("header_subtitle")
         self.lbl_subtitle.setWordWrap(True)
@@ -200,7 +201,7 @@ class MainWindow(QMainWindow):
         main_layout.addWidget(header)
         main_layout.addWidget(Separator())
 
-        # CORPO — Splitter esquerda / direita
+        # CORPO â€” Splitter esquerda / direita
         splitter = QSplitter(Qt.Orientation.Horizontal)
 
         # Painel Esquerdo
@@ -234,7 +235,7 @@ class MainWindow(QMainWindow):
         left_layout.addWidget(grp_imagens)
 
         # Grupo: Amostras
-        grp_amostras = QGroupBox("Amostras — Shapefiles por Classe")
+        grp_amostras = QGroupBox("Amostras â€” Shapefiles por Classe")
         lay_amostras = QVBoxLayout(grp_amostras)
         lay_amostras.setSpacing(8)
 
@@ -491,7 +492,7 @@ class MainWindow(QMainWindow):
         self.progress = QProgressBar()
         self.progress.setValue(0)
         self.progress.setTextVisible(True)
-        self.progress.setFormat(" %p% — aguardando... ")
+        self.progress.setFormat(" %p% â€” aguardando... ")
         right_layout.addWidget(self.progress)
 
         action_bar = QWidget()
@@ -535,6 +536,37 @@ class MainWindow(QMainWindow):
         self.controller = MainController(self)
         self.loader_overlay = HudCircularRingsLoader(self)
         self.loader_overlay.setGeometry(self.rect())
+        self._apply_field_tooltips()
+
+    def _apply_field_tooltips(self):
+        mapping = [
+            ("training_image", [self.row_img_treino.label, self.row_img_treino.edit, self.row_img_treino.btn]),
+            ("classification_image", [self.row_img_classif.label, self.row_img_classif.edit, self.row_img_classif.btn]),
+            ("output_tiff", [self.row_img_saida.label, self.row_img_saida.edit, self.row_img_saida.btn]),
+            ("hidden_layers", [self.edit_camadas]),
+            ("activation", [self.combo_ativacao]),
+            ("dropout_rate", [self.spin_dropout]),
+            ("epochs", [self.spin_epochs]),
+            ("batch_size_train", [self.spin_batch_train]),
+            ("batch_size_pred", [self.spin_batch_pred]),
+            ("test_size", [self.spin_test_size]),
+            ("random_state", [self.spin_random]),
+            ("ram_limit_pct", [self.spin_ram]),
+            ("use_mask", [self.chk_mascara]),
+            ("zero_as_nodata", [self.chk_zero_nodata]),
+            ("nodata_threshold", [self.spin_alpha]),
+            ("model_action", [self.combo_model_action]),
+            ("existing_model_path", [self.row_modelo_existente.label, self.row_modelo_existente.edit, self.row_modelo_existente.btn]),
+            ("save_model", [self.chk_salvar_modelo]),
+            ("model_path", [self.row_modelo_path.label, self.row_modelo_path.edit, self.row_modelo_path.btn]),
+        ]
+        for key, widgets in mapping:
+            spec = UI_FIELD_SPECS.get(key)
+            desc = spec.description if spec else ""
+            if not desc:
+                continue
+            for widget in widgets:
+                widget.setToolTip(desc)
 
     def _add_shp_row(self, path: str, classe: int):
         row = self.table_shp.rowCount()
@@ -571,11 +603,11 @@ class MainWindow(QMainWindow):
         if self.isMaximized():
             self.showNormal()
             if hasattr(self, "btn_max"):
-                self.btn_max.setText("□")
+                self.btn_max.setText("â–¡")
         else:
             self.showMaximized()
             if hasattr(self, "btn_max"):
-                self.btn_max.setText("❐")
+                self.btn_max.setText("â")
 
     def resizeEvent(self, event):
         super().resizeEvent(event)
@@ -609,9 +641,9 @@ class MainWindow(QMainWindow):
         super().mouseDoubleClickEvent(event)
 
 
-# ═══════════════════════════════════════════════════════════════════════════
+# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 # PONTO DE ENTRADA
-# ═══════════════════════════════════════════════════════════════════════════
+# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 def main():
     app = QApplication(sys.argv)
@@ -628,3 +660,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+    
+
