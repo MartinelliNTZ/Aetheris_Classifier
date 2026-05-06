@@ -262,8 +262,25 @@ class ClassifierPipeline:
   </div>
   <div class="card">
     <h2>Graficos de Avaliacao</h2>
-    {_img_tag(evaluation.confusion_matrix_path, "Matriz de Confusao") if evaluation is not None else "<p class='muted'>Nao gerado no modo de uso de modelo existente.</p>"}
-    {_img_tag(evaluation.plot_loss_path, "Curvas de Loss e Accuracy") if evaluation is not None else ""}
+
+    <div style="display:flex; gap:14px; align-items:flex-start; width:100%; flex-wrap:wrap;">
+      <div style="flex:1; min-width:260px;">
+        {_img_tag(evaluation.confusion_matrix_path, "Matriz de Confusao") if evaluation is not None else "<p class='muted'>Nao gerado no modo de uso de modelo existente.</p>"}
+      </div>
+
+      <div style="flex:2; min-width:320px;">
+        {_img_tag(evaluation.plot_loss_path, "Curvas de Loss e Accuracy") if evaluation is not None else ""}
+      </div>
+    </div>
+
+    <style>
+      /* Ajuste responsivo das imagens dentro desta section */
+      .card img{{
+        width:100% !important;
+        height:auto !important;
+        display:block;
+      }}
+    </style>
   </div>
 </body>
 </html>
