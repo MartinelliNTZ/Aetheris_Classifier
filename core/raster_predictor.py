@@ -1,6 +1,7 @@
 ﻿from __future__ import annotations
 
 import math
+import threading
 from time import perf_counter
 from pathlib import Path
 from typing import Callable, Optional
@@ -23,6 +24,7 @@ class RasterPredictor:
         ram_limit_bytes: Optional[int] = None,
         progress_callback: Optional[Callable[[int, str], None]] = None,
         logger: Optional[Callable[[str], None]] = None,
+        cancel_event: Optional[threading.Event] = None,
     ):
         self.batch_size = batch_size
         self.use_mask = use_mask
@@ -31,6 +33,7 @@ class RasterPredictor:
         self.ram_limit_bytes = ram_limit_bytes
         self.progress_callback = progress_callback
         self.logger = logger
+        self.cancel_event = cancel_event or threading.Event()
 
     def _report_progress(self, percent: int, message: str) -> None:
         if self.progress_callback:
@@ -116,6 +119,9 @@ class RasterPredictor:
         with rasterio.open(str(output_path), "w", **out_meta) as dst:
             with rasterio.open(str(source_path)) as src:
                 for chunk_index, (row_start, n_rows) in enumerate(tasks):
+                    if self.cancel_event.is_set():
+                        self._log("> CANCELAMENTO: Predicao interrompida pelo usuario")
+                        break
                     chunk_started_at = perf_counter()
                     window = Window(0, row_start, width, n_rows)
                     read_started_at = perf_counter()

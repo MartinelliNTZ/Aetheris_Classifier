@@ -6,6 +6,7 @@ import shutil
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
+import threading
 from typing import Callable, Dict, List, Optional, Tuple
 
 import geopandas as gpd
@@ -42,10 +43,12 @@ class ClassifierPipeline:
         config: PipelineConfig,
         logger: Optional[Callable[[str], None]] = None,
         progress_callback: Optional[Callable[[int, str], None]] = None,
+        cancel_event: Optional[threading.Event] = None,
     ):
         self.config = config
         self.logger = logger or print
         self.progress_callback = progress_callback
+        self.cancel_event = cancel_event or threading.Event()
         self.hardware_info = None
         self.model = None
         self.history = None
@@ -54,6 +57,13 @@ class ClassifierPipeline:
         self._last_saved_info_path: Optional[Path] = None
         self._run_started_at: Optional[datetime] = None
         self._report_dir: Optional[Path] = None
+
+    def _check_cancel(self) -> bool:
+        """Returns True if pipeline should be cancelled."""
+        if self.cancel_event.is_set():
+            self._log("> CANCELAMENTO: Pipeline interrompido pelo usuario")
+            return True
+        return False
 
     def _log(self, message: str) -> None:
         self.logger(message)
@@ -474,6 +484,17 @@ class ClassifierPipeline:
         shapefiles_info: List[Dict[str, object]] = []
         n_bands_feature = 0
 
+        if self._check_cancel():
+            return PipelineResult(
+                hardware_info=self.hardware_info,
+                evaluation=None,
+                output_path=self.config.output_path,
+                model_path=None,
+                info_path=None,
+                history=None,
+                class_names=[],
+            )
+
         self._log("Preparando o modelo")
         if self.config.model_action == "Usar modelo existente":
             self.model = self._load_existing_model()
@@ -599,6 +620,7 @@ class ClassifierPipeline:
             ram_limit_bytes=self.hardware_info.ram_limit_bytes,
             progress_callback=self._progress,
             logger=self._log,
+            cancel_event=self.cancel_event,
         )
         output_path = predictor.predict(
             self.config.classification_image,

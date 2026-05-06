@@ -226,10 +226,27 @@ class MainWindow(QMainWindow):
         self.btn_clear_console.setCursor(Qt.CursorShape.PointingHandCursor)
         self.btn_clear_console.setStyleSheet(btn_style)
         self.btn_clear_console.setMinimumHeight(32)
+        self.btn_cancelar = QPushButton("CANCELAR")
+        self.btn_cancelar.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.btn_cancelar.setEnabled(False)
+        self.btn_cancelar.setStyleSheet(
+            "QPushButton {"
+            f"  background-color: {DarkCharcoalStyle.DANGER};"
+            f"  color: {DarkCharcoalStyle.DARK_BG};"
+            "  border: none; border-radius: 5px; padding: 6px 14px;"
+            "  font-weight: 700; font-size: 11px;"
+            "}"
+            "QPushButton:hover { background-color: #E05555; }"
+            "QPushButton:pressed { background-color: #BB3333; }"
+            "QPushButton:disabled { background-color: #555555; color: #888888; }"
+        )
+        self.btn_cancelar.setMinimumHeight(32)
+        self.btn_cancelar.setMinimumWidth(100)
         al.addWidget(self.btn_load_cfg)
         al.addWidget(self.btn_save_cfg)
         al.addWidget(self.btn_reset_cfg)
         al.addWidget(self.btn_clear_console)
+        al.addWidget(self.btn_cancelar)
         al.addStretch()
         self.btn_executar = QPushButton("EXECUTAR PIPELINE")
         self.btn_executar.setCursor(Qt.CursorShape.PointingHandCursor)

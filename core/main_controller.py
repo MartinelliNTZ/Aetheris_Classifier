@@ -18,6 +18,7 @@ from pathlib import Path
 from datetime import datetime, timedelta
 from time import perf_counter
 
+import threading
 from PySide6.QtCore import Qt, QThread, Signal, QTimer
 from PySide6.QtGui import QDesktopServices
 from PySide6.QtWidgets import QTableWidgetItem, QLineEdit, QSpinBox, QPushButton, QFileDialog, QInputDialog, QMessageBox
@@ -41,6 +42,10 @@ class PipelineWorker(QThread):
     def __init__(self, config: PipelineConfig, parent=None):
         super().__init__(parent)
         self.config = config
+        self.cancel_event = threading.Event()
+
+    def cancel(self) -> None:
+        self.cancel_event.set()
 
     def run(self):
         try:
@@ -48,9 +53,13 @@ class PipelineWorker(QThread):
                 config=self.config,
                 logger=self.log.emit,
                 progress_callback=self._emit_progress,
+                cancel_event=self.cancel_event,
             )
             pipeline.execute()
-            self.finished.emit("Pipeline concluido com sucesso")
+            if self.cancel_event.is_set():
+                self.finished.emit("Pipeline cancelado pelo usuario")
+            else:
+                self.finished.emit("Pipeline concluido com sucesso")
         except Exception as exc:
             self.error.emit(str(exc))
 
@@ -74,6 +83,7 @@ class MainController:
         self._progress_timer.timeout.connect(self._refresh_time_based_progress)
         self._last_output_tif_path: Path | None = None
         self._last_report_html_path: Path | None = None
+        self._cancel_requested = False
 
         self._connect_signals()
         self._init_defaults()
@@ -89,6 +99,7 @@ class MainController:
         self.view.combo_model_action.currentTextChanged.connect(self._on_model_action_changed)
         self.view.btn_listar_modelos.clicked.connect(self._on_listar_modelos)
         self.view.btn_clear_console.clicked.connect(self._on_clear_console)
+        self.view.btn_cancelar.clicked.connect(self._on_cancelar)
         self.view.txt_log.anchorClicked.connect(self._on_log_link_clicked)
 
         widgets_bind = [
@@ -264,10 +275,20 @@ class MainController:
     def _on_clear_console(self):
         self.view.txt_log.clear()
 
+    def _on_cancelar(self):
+        if self.worker is None or not self.worker.isRunning():
+            return
+        self._append_log("> Cancelamento solicitado pelo usuario. Aguardando parada segura...")
+        self._cancel_requested = True
+        self.worker.cancel()
+        self.view.btn_cancelar.setEnabled(False)
+        self.view.btn_cancelar.setText("CANCELANDO...")
+
     def _on_executar(self):
         if self.worker is not None and self.worker.isRunning():
             self._append_log("> O pipeline ja esta em execucao")
             return
+        self._cancel_requested = False
 
         pipeline_data = self.get_pipeline_config()
         try:
@@ -445,7 +466,9 @@ class MainController:
         self.view.btn_load_cfg.setEnabled(not running)
         self.view.btn_save_cfg.setEnabled(not running)
         self.view.btn_reset_cfg.setEnabled(not running)
+        self.view.btn_cancelar.setEnabled(running)
         if running:
+            self.view.btn_cancelar.setText("CANCELAR")
             if not self._progress_timer.isActive():
                 self._progress_timer.start()
             if hasattr(self.view, "loader_overlay"):
@@ -463,6 +486,7 @@ class MainController:
                 "}"
             )
         else:
+            self._cancel_requested = False
             if self._progress_timer.isActive():
                 self._progress_timer.stop()
             if hasattr(self.view, "loader_overlay"):
@@ -492,14 +516,28 @@ class MainController:
             self.view.loader_overlay.set_progress(display_percent, display_message)
 
     def _on_pipeline_finished(self, message: str) -> None:
-        self._finalize_run_metrics(success=True)
+        is_cancel = self._cancel_requested or "cancelado" in str(message).lower()
+        self._finalize_run_metrics(success=not is_cancel)
         self._append_log(f"> {message}")
-        self._append_output_links()
+        if not is_cancel:
+            self._append_output_links()
         self._set_running_state(False)
+        if is_cancel:
+            self.view.badge_status.setText("CANCELADO")
+            self.view.badge_status.setStyleSheet(
+                "QLabel {"
+                f"  background-color: {DarkCharcoalStyle.WARNING};"
+                f"  color: {DarkCharcoalStyle.DARK_BG};"
+                "  border-radius: 6px;"
+                "  padding: 4px 14px;"
+                "  font-weight: 700;"
+                "  font-size: 11px;"
+                "}"
+            )
         self.view.progress.setValue(100)
-        self.view.progress.setFormat(" 100% - concluido ")
+        self.view.progress.setFormat(" 100% - concluido " if not is_cancel else " 100% - cancelado ")
         if hasattr(self.view, "loader_overlay"):
-            self.view.loader_overlay.set_progress(100, "Concluido")
+            self.view.loader_overlay.set_progress(100, "Concluido" if not is_cancel else "Cancelado")
             self.view.loader_overlay.hide_loader()
 
     def _on_pipeline_error(self, message: str) -> None:
