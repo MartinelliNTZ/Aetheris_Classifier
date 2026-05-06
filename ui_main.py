@@ -378,7 +378,7 @@ class MainWindow(QMainWindow):
         row_hw1.addWidget(self.chk_mascara, alignment=Qt.AlignmentFlag.AlignBottom)
 
         col = QVBoxLayout()
-        col.addWidget(QLabel("Valor Min. Alpha"))
+        col.addWidget(QLabel("Limiar Nodata"))
         self.spin_alpha = QSpinBox()
         self.spin_alpha.setRange(0, 255)
         self.spin_alpha.setValue(250)

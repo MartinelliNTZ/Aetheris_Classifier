@@ -1,8 +1,7 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 import numpy as np
-from pathlib import Path
-from typing import Optional, Tuple
+from typing import Tuple
 
 from .raster_source import RasterSource
 
@@ -13,27 +12,39 @@ class FeatureExtractor:
         raster: RasterSource,
         geopandas_frame,
         use_mask: bool = True,
-        alpha_threshold: int = 250,
+        nodata_threshold: int = 250,
     ) -> Tuple[np.ndarray, np.ndarray, int]:
         if geopandas_frame is None or geopandas_frame.empty:
-            raise ValueError("GeoDataFrame de amostras está vazio")
+            raise ValueError("GeoDataFrame de amostras esta vazio")
 
         coords = [(float(x), float(y)) for x, y in zip(geopandas_frame.geometry.x, geopandas_frame.geometry.y)]
         valores = raster.sample(coords)
 
         if valores.ndim != 2:
-            raise ValueError("A extração espectral retornou um array com dimensões inválidas")
+            raise ValueError("A extracao espectral retornou um array com dimensoes invalidas")
 
         n_bands = raster.count
-        if use_mask and n_bands > 1:
+        has_alpha_band = use_mask and n_bands > 1
+        if has_alpha_band:
             n_bands_feature = n_bands - 1
-            X = valores[:, :n_bands_feature]
+            x_all = valores[:, :n_bands_feature]
+            valid_mask = valores[:, -1] >= nodata_threshold
         else:
             n_bands_feature = n_bands
-            X = valores
+            x_all = valores
+            if use_mask:
+                valid_mask = np.ones(x_all.shape[0], dtype=bool)
+            else:
+                valid_mask = ~np.all(x_all > nodata_threshold, axis=1)
 
-        if np.isnan(X).any():
-            raise ValueError("Foram encontrados valores NaN na extração espectral")
+        x_filtered = x_all[valid_mask]
+        gdf_filtered = geopandas_frame.loc[valid_mask]
 
-        Y = geopandas_frame["id"].to_numpy(dtype=np.int32).reshape(-1, 1)
-        return X.astype(np.float32), Y, n_bands_feature
+        if x_filtered.size == 0:
+            raise ValueError("Nenhuma amostra valida apos aplicar mascara/nodata")
+
+        if np.isnan(x_filtered).any():
+            raise ValueError("Foram encontrados valores NaN na extracao espectral")
+
+        y_filtered = gdf_filtered["id"].to_numpy(dtype=np.int32).reshape(-1, 1)
+        return x_filtered.astype(np.float32), y_filtered, n_bands_feature

@@ -36,7 +36,7 @@ class PipelineConfig:
     activation: str
     dropout_rate: float
     use_mask: bool
-    alpha_threshold: int
+    nodata_threshold: int
     ram_limit_pct: int
 
     VALID_ACTIONS = (
@@ -103,7 +103,12 @@ class PipelineConfig:
                 activation=str(data.get("activation", data.get("ativacao", "relu"))),
                 dropout_rate=float(data.get("dropout_rate", data.get("dropout", 0.1))),
                 use_mask=bool(data.get("use_mask", data.get("usar_mascara", True))),
-                alpha_threshold=int(data.get("alpha_threshold", data.get("valor_minimo_alpha", 250))),
+                nodata_threshold=int(
+                    data.get(
+                        "nodata_threshold",
+                        data.get("alpha_threshold", data.get("valor_minimo_alpha", 250)),
+                    )
+                ),
                 ram_limit_pct=int(data.get("ram_limit_pct", data.get("spin_ram", 70))),
             )
         except KeyError as exc:
@@ -178,7 +183,7 @@ class PipelineConfig:
             "activation": self.activation,
             "dropout_rate": self.dropout_rate,
             "use_mask": self.use_mask,
-            "alpha_threshold": self.alpha_threshold,
+            "nodata_threshold": self.nodata_threshold,
             "ram_limit_pct": self.ram_limit_pct,
         }
 

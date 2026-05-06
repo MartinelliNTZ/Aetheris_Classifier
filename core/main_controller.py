@@ -508,7 +508,7 @@ class MainController:
         self.view.spin_random.setValue(config.random_state)
         self.view.spin_ram.setValue(config.ram_limit_pct)
         self.view.chk_mascara.setChecked(config.use_mask)
-        self.view.spin_alpha.setValue(config.alpha_threshold)
+        self.view.spin_alpha.setValue(config.nodata_threshold)
         self.view.chk_salvar_modelo.setChecked(config.save_model)
         self.view.row_modelo_path.edit.setText(str(config.model_path))
         self.view.combo_model_action.setCurrentText(config.model_action)
@@ -538,7 +538,9 @@ class MainController:
         self.view.spin_random.setValue(int(self.preferences.get("random_state", self.view.spin_random.value())))
         self.view.spin_ram.setValue(int(self.preferences.get("ram_limit_pct", self.view.spin_ram.value())))
         self.view.chk_mascara.setChecked(bool(self.preferences.get("use_mask", self.view.chk_mascara.isChecked())))
-        self.view.spin_alpha.setValue(int(self.preferences.get("alpha_threshold", self.view.spin_alpha.value())))
+        self.view.spin_alpha.setValue(
+            int(self.preferences.get("nodata_threshold", self.preferences.get("alpha_threshold", self.view.spin_alpha.value())))
+        )
         self.view.chk_salvar_modelo.setChecked(bool(self.preferences.get("save_model", self.view.chk_salvar_modelo.isChecked())))
         self.view.row_modelo_path.edit.setText(str(self.preferences.get("model_path", self.view.row_modelo_path.path())))
         self.view.combo_model_action.setCurrentText(str(self.preferences.get("model_action", self.view.combo_model_action.currentText())))
@@ -741,6 +743,6 @@ class MainController:
             "activation": self.view.combo_ativacao.currentText(),
             "dropout_rate": self.view.spin_dropout.value(),
             "use_mask": self.view.chk_mascara.isChecked(),
-            "alpha_threshold": self.view.spin_alpha.value(),
+            "nodata_threshold": self.view.spin_alpha.value(),
             "ram_limit_pct": self.view.spin_ram.value(),
         }

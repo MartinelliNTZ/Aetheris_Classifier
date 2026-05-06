@@ -18,14 +18,14 @@ class RasterPredictor:
         self,
         batch_size: int = 4096,
         use_mask: bool = True,
-        alpha_threshold: int = 250,
+        nodata_threshold: int = 250,
         ram_limit_bytes: Optional[int] = None,
         progress_callback: Optional[Callable[[int, str], None]] = None,
         logger: Optional[Callable[[str], None]] = None,
     ):
         self.batch_size = batch_size
         self.use_mask = use_mask
-        self.alpha_threshold = alpha_threshold
+        self.nodata_threshold = nodata_threshold
         self.ram_limit_bytes = ram_limit_bytes
         self.progress_callback = progress_callback
         self.logger = logger
@@ -55,7 +55,8 @@ class RasterPredictor:
             n_bands_total = src.count
             out_meta = src.meta.copy()
 
-        n_feat_classif = n_bands_total - 1 if self.use_mask else n_bands_total
+        has_alpha_band = self.use_mask and n_bands_total == (n_bands_feature + 1)
+        n_feat_classif = n_bands_total - 1 if has_alpha_band else n_bands_total
         if n_feat_classif != n_bands_feature:
             raise ValueError(
                 f"Incompatibilidade de bandas: treino usou {n_bands_feature} bandas, "
@@ -73,6 +74,13 @@ class RasterPredictor:
             f"RAM disponivel={ram_available / (1024 ** 3):.2f}GB | "
             f"RAM limite uso={ram_to_use / (1024 ** 3):.2f}GB | chunk_lines={chunk_lines} | chunks={num_chunks}"
         )
+        if has_alpha_band:
+            self._log(f"RasterPredictor: estrategia de validacao=alpha (alpha >= {self.nodata_threshold})")
+        else:
+            self._log(
+                "RasterPredictor: estrategia de validacao=multibanda "
+                f"(todas as bandas > {self.nodata_threshold} => nodata)"
+            )
         self._log("RasterPredictor: loop de chunks sequencial; paralelismo interno via GDAL threads + TensorFlow threads.")
 
         out_meta.update(
@@ -110,7 +118,7 @@ class RasterPredictor:
                     chunk_data = src.read(window=window)
                     read_seconds = perf_counter() - read_started_at
 
-                    if self.use_mask and n_bands_total > n_bands_feature:
+                    if has_alpha_band:
                         mask_band = chunk_data[-1]
                         features = chunk_data[:n_bands_feature]
                     else:
@@ -120,7 +128,9 @@ class RasterPredictor:
                     flattened = features.transpose(1, 2, 0).reshape(-1, n_bands_feature).astype(np.float32)
                     valid_mask = np.ones(flattened.shape[0], dtype=bool)
                     if mask_band is not None:
-                        valid_mask = mask_band.reshape(-1) >= self.alpha_threshold
+                        valid_mask = mask_band.reshape(-1) >= self.nodata_threshold
+                    else:
+                        valid_mask = ~np.all(flattened > float(self.nodata_threshold), axis=1)
 
                     result_arr = np.full(flattened.shape[0], 255, dtype=np.uint8)
                     num_valid = int(valid_mask.sum())
@@ -161,7 +171,7 @@ class RasterPredictor:
                 pass
             raise ValueError(
                 "Nenhum pixel valido foi classificado. Saida resultaria em raster vazio/nodata. "
-                "Verifique mascara/alpha ou desative 'Usar mascara'."
+                "Verifique mascara/limiar nodata."
             )
 
         with rasterio.open(str(output_path), "r+") as dst:

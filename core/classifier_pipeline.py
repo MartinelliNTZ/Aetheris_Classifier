@@ -227,7 +227,7 @@ class ClassifierPipeline:
     <p><b>RAM limite:</b> {float(getattr(self.hardware_info, "ram_limit_gb", 0.0)):.2f} GB ({self.config.ram_limit_pct}%)</p>
     <p><b>Acao do modelo:</b> {self.config.model_action}</p>
     <p><b>Camadas ocultas:</b> {self.config.hidden_layers} | <b>Ativacao:</b> {self.config.activation} | <b>Dropout:</b> {self.config.dropout_rate}</p>
-    <p><b>Mascara:</b> {self.config.use_mask} (alpha >= {self.config.alpha_threshold})</p>
+    <p><b>Mascara:</b> {self.config.use_mask} (limiar nodata = {self.config.nodata_threshold})</p>
   </div>
   <div class="card">
     <h2>Arquivos Utilizados</h2>
@@ -492,7 +492,7 @@ class ClassifierPipeline:
                 train_raster,
                 sample_gdf,
                 use_mask=self.config.use_mask,
-                alpha_threshold=self.config.alpha_threshold,
+                nodata_threshold=self.config.nodata_threshold,
             )
 
             split = DatasetSplitter.split(
@@ -521,7 +521,7 @@ class ClassifierPipeline:
                 train_raster,
                 sample_gdf,
                 use_mask=self.config.use_mask,
-                alpha_threshold=self.config.alpha_threshold,
+                nodata_threshold=self.config.nodata_threshold,
             )
             split = DatasetSplitter.split(
                 X,
@@ -573,7 +573,7 @@ class ClassifierPipeline:
         predictor = RasterPredictor(
             batch_size=self.config.batch_size_pred,
             use_mask=self.config.use_mask,
-            alpha_threshold=self.config.alpha_threshold,
+            nodata_threshold=self.config.nodata_threshold,
             ram_limit_bytes=self.hardware_info.ram_limit_bytes,
             progress_callback=self._progress,
             logger=self._log,
