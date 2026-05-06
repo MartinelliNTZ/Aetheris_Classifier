@@ -24,7 +24,7 @@ from PySide6.QtGui import QDesktopServices
 from PySide6.QtWidgets import QTableWidgetItem, QLineEdit, QSpinBox, QPushButton, QFileDialog, QInputDialog, QMessageBox
 
 from core.Preferences import Preferences
-from core.dark_charcoal_style import DarkCharcoalStyle
+from core.styles import AppStyles, Palette
 from core.classifier_pipeline import ClassifierPipeline
 from core.pipeline_config import PipelineConfig, PipelineConfigError
 
@@ -475,16 +475,7 @@ class MainController:
                 self.view.loader_overlay.set_progress(0, self._format_progress_message("Iniciando pipeline..."))
                 self.view.loader_overlay.show_loader()
             self.view.badge_status.setText("EXECUTANDO")
-            self.view.badge_status.setStyleSheet(
-                "QLabel {"
-                f"  background-color: {DarkCharcoalStyle.WARNING};"
-                f"  color: {DarkCharcoalStyle.DARK_BG};"
-                "  border-radius: 6px;"
-                "  padding: 4px 14px;"
-                "  font-weight: 700;"
-                "  font-size: 11px;"
-                "}"
-            )
+            self.view.badge_status.setStyleSheet(AppStyles.badge_running())
         else:
             self._cancel_requested = False
             if self._progress_timer.isActive():
@@ -492,16 +483,7 @@ class MainController:
             if hasattr(self.view, "loader_overlay"):
                 self.view.loader_overlay.hide_loader()
             self.view.badge_status.setText("PRONTA")
-            self.view.badge_status.setStyleSheet(
-                "QLabel {"
-                f"  background-color: {DarkCharcoalStyle.SUCCESS};"
-                f"  color: {DarkCharcoalStyle.DARK_BG};"
-                "  border-radius: 6px;"
-                "  padding: 4px 14px;"
-                "  font-weight: 700;"
-                "  font-size: 11px;"
-                "}"
-            )
+            self.view.badge_status.setStyleSheet(AppStyles.badge_success())
 
     def _on_progress_update(self, percent: int, message: str) -> None:
         self._last_progress_message = message or self._last_progress_message
@@ -524,16 +506,7 @@ class MainController:
         self._set_running_state(False)
         if is_cancel:
             self.view.badge_status.setText("CANCELADO")
-            self.view.badge_status.setStyleSheet(
-                "QLabel {"
-                f"  background-color: {DarkCharcoalStyle.WARNING};"
-                f"  color: {DarkCharcoalStyle.DARK_BG};"
-                "  border-radius: 6px;"
-                "  padding: 4px 14px;"
-                "  font-weight: 700;"
-                "  font-size: 11px;"
-                "}"
-            )
+            self.view.badge_status.setStyleSheet(AppStyles.badge_canceled())
         self.view.progress.setValue(100)
         self.view.progress.setFormat(" 100% - concluido " if not is_cancel else " 100% - cancelado ")
         if hasattr(self.view, "loader_overlay"):
@@ -547,16 +520,7 @@ class MainController:
         if hasattr(self.view, "loader_overlay"):
             self.view.loader_overlay.hide_loader()
         self.view.badge_status.setText("ERRO")
-        self.view.badge_status.setStyleSheet(
-            "QLabel {"
-            f"  background-color: {DarkCharcoalStyle.DANGER};"
-            f"  color: {DarkCharcoalStyle.DARK_BG};"
-            "  border-radius: 6px;"
-            "  padding: 4px 14px;"
-            "  font-weight: 700;"
-            "  font-size: 11px;"
-            "}"
-        )
+        self.view.badge_status.setStyleSheet(AppStyles.badge_error())
 
     def _populate_fields(self, config: PipelineConfig) -> None:
         self.view.row_img_treino.edit.setText(str(config.training_image))

@@ -16,7 +16,7 @@ from PySide6.QtWidgets import (
 )
 from PySide6.QtCore import Qt, QPoint
 from PySide6.QtGui import QFont, QIcon
-from core.dark_charcoal_style import DarkCharcoalStyle
+from core.styles import AppStyles, Palette
 from core.hud_loader import HudCircularRingsLoader
 from core.main_controller import MainController
 from core.ui_field_specs import UI_FIELD_SPECS
@@ -112,8 +112,8 @@ class MainWindow(QMainWindow):
         gb.setStyleSheet(
             "QGroupBox {"
             "  font-weight: 700;"
-            "  color: #D4A853;"
-            "  border: 1px solid #3E3E42;"
+            f"  color: {Palette.GOLD};"
+            f"  border: 1px solid {Palette.BORDER};"
             "  border-radius: 6px;"
             "  margin-top: 8px;"
             "  padding: 18px 10px 10px 10px;"
@@ -181,65 +181,36 @@ class MainWindow(QMainWindow):
         tc.addWidget(self.lbl_subtitle)
         hl.addLayout(tc, 1)
         self.badge_status = Badge("PRONTA")
-        self.badge_status.setStyleSheet(
-            f"background-color: {DarkCharcoalStyle.SUCCESS}; color: {DarkCharcoalStyle.DARK_BG};"
-            " border-radius: 5px; padding: 3px 12px; font-weight: 700; font-size: 10px;"
-        )
+        self.badge_status.setStyleSheet(AppStyles.badge_success())
         hl.addWidget(self.badge_status, alignment=Qt.AlignmentFlag.AlignVCenter)
         main_layout.addWidget(header)
         main_layout.addWidget(Separator())
 
         # --- ACTION BUTTONS ---
-        btn_style = (
-            "QPushButton {"
-            f"  background-color: {DarkCharcoalStyle.DARK_BG};"
-            f"  color: {DarkCharcoalStyle.ACCENT_GOLD};"
-            "  border: 1px solid #555555;"
-            "  border-radius: 5px;"
-            "  padding: 6px 14px;"
-            "  font-weight: 600;"
-            "  font-size: 11px;"
-            "}"
-            "QPushButton:hover {"
-            "  background-color: #2A2A2A;"
-            f"  border-color: {DarkCharcoalStyle.ACCENT_GOLD};"
-            "}"
-            "QPushButton:pressed { background-color: #1A1A1A; }"
-        )
         ab = QWidget()
         al = QHBoxLayout(ab)
         al.setContentsMargins(0, 0, 0, 0)
         al.setSpacing(6)
         self.btn_load_cfg = QPushButton("Carregar Config")
         self.btn_load_cfg.setCursor(Qt.CursorShape.PointingHandCursor)
-        self.btn_load_cfg.setStyleSheet(btn_style)
+        self.btn_load_cfg.setStyleSheet(AppStyles.btn_secondary_style())
         self.btn_load_cfg.setMinimumHeight(32)
         self.btn_save_cfg = QPushButton("Salvar Config")
         self.btn_save_cfg.setCursor(Qt.CursorShape.PointingHandCursor)
-        self.btn_save_cfg.setStyleSheet(btn_style)
+        self.btn_save_cfg.setStyleSheet(AppStyles.btn_secondary_style())
         self.btn_save_cfg.setMinimumHeight(32)
         self.btn_reset_cfg = QPushButton("Restaurar Padrao")
         self.btn_reset_cfg.setCursor(Qt.CursorShape.PointingHandCursor)
-        self.btn_reset_cfg.setStyleSheet(btn_style)
+        self.btn_reset_cfg.setStyleSheet(AppStyles.btn_secondary_style())
         self.btn_reset_cfg.setMinimumHeight(32)
         self.btn_clear_console = QPushButton("Limpar Console")
         self.btn_clear_console.setCursor(Qt.CursorShape.PointingHandCursor)
-        self.btn_clear_console.setStyleSheet(btn_style)
+        self.btn_clear_console.setStyleSheet(AppStyles.btn_secondary_style())
         self.btn_clear_console.setMinimumHeight(32)
         self.btn_cancelar = QPushButton("CANCELAR")
         self.btn_cancelar.setCursor(Qt.CursorShape.PointingHandCursor)
         self.btn_cancelar.setEnabled(False)
-        self.btn_cancelar.setStyleSheet(
-            "QPushButton {"
-            f"  background-color: {DarkCharcoalStyle.DANGER};"
-            f"  color: {DarkCharcoalStyle.DARK_BG};"
-            "  border: none; border-radius: 5px; padding: 6px 14px;"
-            "  font-weight: 700; font-size: 11px;"
-            "}"
-            "QPushButton:hover { background-color: #E05555; }"
-            "QPushButton:pressed { background-color: #BB3333; }"
-            "QPushButton:disabled { background-color: #555555; color: #888888; }"
-        )
+        self.btn_cancelar.setStyleSheet(AppStyles.btn_danger_style())
         self.btn_cancelar.setMinimumHeight(32)
         self.btn_cancelar.setMinimumWidth(100)
         al.addWidget(self.btn_load_cfg)
@@ -250,17 +221,7 @@ class MainWindow(QMainWindow):
         al.addStretch()
         self.btn_executar = QPushButton("EXECUTAR PIPELINE")
         self.btn_executar.setCursor(Qt.CursorShape.PointingHandCursor)
-        self.btn_executar.setStyleSheet(
-            "QPushButton {"
-            f"  background-color: {DarkCharcoalStyle.ACCENT_GOLD};"
-            f"  color: {DarkCharcoalStyle.DARK_BG};"
-            "  border: none; border-radius: 5px; padding: 6px 20px;"
-            "  font-weight: 800; font-size: 13px;"
-            "}"
-            "QPushButton:hover { background-color: #E8C060; }"
-            "QPushButton:pressed { background-color: #C4A040; }"
-            "QPushButton:disabled { background-color: #555555; color: #888888; }"
-        )
+        self.btn_executar.setStyleSheet(AppStyles.btn_primary_style())
         self.btn_executar.setMinimumWidth(180)
         self.btn_executar.setMinimumHeight(34)
         al.addWidget(self.btn_executar)
@@ -310,11 +271,7 @@ class MainWindow(QMainWindow):
         lm.addWidget(self.row_modelo_existente)
         self.btn_listar_modelos = QPushButton("Listar Modelos")
         self.btn_listar_modelos.setCursor(Qt.CursorShape.PointingHandCursor)
-        self.btn_listar_modelos.setStyleSheet(
-            "QPushButton { background-color: #1E1E1E; color: #D4A853; border: 1px solid #555555;"
-            " border-radius: 4px; padding: 4px 12px; font-weight: 600; font-size: 11px; }"
-            "QPushButton:hover { border-color: #D4A853; }"
-        )
+        self.btn_listar_modelos.setStyleSheet(AppStyles.btn_ghost_style())
         self.btn_listar_modelos.setVisible(False)
         lm.addWidget(self.btn_listar_modelos, alignment=Qt.AlignmentFlag.AlignLeft)
         self.chk_salvar_modelo = QCheckBox("Salvar modelo (.keras)")
@@ -346,11 +303,7 @@ class MainWindow(QMainWindow):
         ls.addWidget(self.table_shp)
         btn_add_shp = QPushButton("+ Adicionar Shapefile")
         btn_add_shp.setCursor(Qt.CursorShape.PointingHandCursor)
-        btn_add_shp.setStyleSheet(
-            "QPushButton { background-color: #1E1E1E; color: #D4A853; border: 1px solid #555555;"
-            " border-radius: 4px; padding: 4px 12px; font-weight: 600; font-size: 11px; }"
-            "QPushButton:hover { border-color: #D4A853; }"
-        )
+        btn_add_shp.setStyleSheet(AppStyles.btn_ghost_style())
         self.btn_add_shp = btn_add_shp
         ls.addWidget(btn_add_shp, alignment=Qt.AlignmentFlag.AlignLeft)
         ls.addStretch()
@@ -606,7 +559,7 @@ class MainWindow(QMainWindow):
 
 def main():
     app = QApplication(sys.argv)
-    app.setStyleSheet(DarkCharcoalStyle.stylesheet())
+    app.setStyleSheet(AppStyles.global_stylesheet())
     font = QFont("Segoe UI", 10)
     font.setStyleHint(QFont.StyleHint.SansSerif)
     app.setFont(font)
