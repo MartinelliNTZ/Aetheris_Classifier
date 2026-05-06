@@ -274,10 +274,14 @@ class ClassifierPipeline:
     </div>
 
     <style>
-      /* Ajuste responsivo das imagens dentro desta section */
+      /* Ajuste responsivo das imagens dentro desta section
+         - Mesma altura fixa
+         - Larguras variáveis (1/3 vs 2/3 via flex)
+      */
       .card img{{
         width:100% !important;
-        height:auto !important;
+        height:420px !important;
+        object-fit:contain;
         display:block;
       }}
     </style>
