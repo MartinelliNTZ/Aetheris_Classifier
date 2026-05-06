@@ -18,6 +18,7 @@ class RasterPredictor:
         self,
         batch_size: int = 4096,
         use_mask: bool = True,
+        zero_as_nodata: bool = False,
         nodata_threshold: int = 250,
         ram_limit_bytes: Optional[int] = None,
         progress_callback: Optional[Callable[[int, str], None]] = None,
@@ -25,6 +26,7 @@ class RasterPredictor:
     ):
         self.batch_size = batch_size
         self.use_mask = use_mask
+        self.zero_as_nodata = zero_as_nodata
         self.nodata_threshold = nodata_threshold
         self.ram_limit_bytes = ram_limit_bytes
         self.progress_callback = progress_callback
@@ -81,6 +83,8 @@ class RasterPredictor:
                 "RasterPredictor: estrategia de validacao=multibanda "
                 f"(todas as bandas > {self.nodata_threshold} => nodata)"
             )
+        if self.zero_as_nodata:
+            self._log("RasterPredictor: regra adicional ativa (todas as bandas == 0 => nodata)")
         self._log("RasterPredictor: loop de chunks sequencial; paralelismo interno via GDAL threads + TensorFlow threads.")
 
         out_meta.update(
@@ -131,6 +135,8 @@ class RasterPredictor:
                         valid_mask = mask_band.reshape(-1) >= self.nodata_threshold
                     else:
                         valid_mask = ~np.all(flattened > float(self.nodata_threshold), axis=1)
+                    if self.zero_as_nodata:
+                        valid_mask &= ~np.all(flattened == 0.0, axis=1)
 
                     result_arr = np.full(flattened.shape[0], 255, dtype=np.uint8)
                     num_valid = int(valid_mask.sum())

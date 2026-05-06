@@ -103,6 +103,7 @@ class MainController:
             self.view.spin_test_size,
             self.view.spin_ram,
             self.view.chk_mascara,
+            self.view.chk_zero_nodata,
             self.view.chk_salvar_modelo,
             self.view.combo_model_action,
             self.view.spin_random,
@@ -240,6 +241,7 @@ class MainController:
         bp = self.view.spin_batch_pred.value()
         ram = self.view.spin_ram.value()
         mask = "Sim" if self.view.chk_mascara.isChecked() else "Nao"
+        zero_nodata = "Sim" if self.view.chk_zero_nodata.isChecked() else "Nao"
 
         model_action = self.view.combo_model_action.currentText()
         resumo = (
@@ -254,7 +256,7 @@ class MainController:
         resumo += (
             f"<b>Rede:</b> [{camadas}] - ativacao {ativ}, dropout {drop}<br>"
             f"<b>Treino:</b> {ep} epocas | batch {bt} / pred {bp}<br>"
-            f"<b>RAM limite:</b> {ram}% | Mascara: {mask}"
+            f"<b>RAM limite:</b> {ram}% | Mascara: {mask} | Zero->Nodata: {zero_nodata}"
         )
         self.view.lbl_resumo.setHtml(resumo)
 
@@ -342,6 +344,7 @@ class MainController:
         self.view.spin_random.setValue(42)
         self.view.spin_ram.setValue(70)
         self.view.chk_mascara.setChecked(True)
+        self.view.chk_zero_nodata.setChecked(False)
         self.view.spin_alpha.setValue(250)
         self.view.chk_salvar_modelo.setChecked(True)
         self.view.row_modelo_path.edit.setText("resultado/modelo_ui.keras")
@@ -508,6 +511,7 @@ class MainController:
         self.view.spin_random.setValue(config.random_state)
         self.view.spin_ram.setValue(config.ram_limit_pct)
         self.view.chk_mascara.setChecked(config.use_mask)
+        self.view.chk_zero_nodata.setChecked(config.zero_as_nodata)
         self.view.spin_alpha.setValue(config.nodata_threshold)
         self.view.chk_salvar_modelo.setChecked(config.save_model)
         self.view.row_modelo_path.edit.setText(str(config.model_path))
@@ -538,6 +542,7 @@ class MainController:
         self.view.spin_random.setValue(int(self.preferences.get("random_state", self.view.spin_random.value())))
         self.view.spin_ram.setValue(int(self.preferences.get("ram_limit_pct", self.view.spin_ram.value())))
         self.view.chk_mascara.setChecked(bool(self.preferences.get("use_mask", self.view.chk_mascara.isChecked())))
+        self.view.chk_zero_nodata.setChecked(bool(self.preferences.get("zero_as_nodata", self.view.chk_zero_nodata.isChecked())))
         self.view.spin_alpha.setValue(
             int(self.preferences.get("nodata_threshold", self.preferences.get("alpha_threshold", self.view.spin_alpha.value())))
         )
@@ -743,6 +748,7 @@ class MainController:
             "activation": self.view.combo_ativacao.currentText(),
             "dropout_rate": self.view.spin_dropout.value(),
             "use_mask": self.view.chk_mascara.isChecked(),
+            "zero_as_nodata": self.view.chk_zero_nodata.isChecked(),
             "nodata_threshold": self.view.spin_alpha.value(),
             "ram_limit_pct": self.view.spin_ram.value(),
         }

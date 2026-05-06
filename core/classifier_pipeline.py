@@ -573,6 +573,7 @@ class ClassifierPipeline:
         predictor = RasterPredictor(
             batch_size=self.config.batch_size_pred,
             use_mask=self.config.use_mask,
+            zero_as_nodata=self.config.zero_as_nodata,
             nodata_threshold=self.config.nodata_threshold,
             ram_limit_bytes=self.hardware_info.ram_limit_bytes,
             progress_callback=self._progress,

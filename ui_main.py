@@ -377,6 +377,10 @@ class MainWindow(QMainWindow):
         self.chk_mascara.setChecked(True)
         row_hw1.addWidget(self.chk_mascara, alignment=Qt.AlignmentFlag.AlignBottom)
 
+        self.chk_zero_nodata = QCheckBox("Valores zerados como nodata")
+        self.chk_zero_nodata.setChecked(False)
+        row_hw1.addWidget(self.chk_zero_nodata, alignment=Qt.AlignmentFlag.AlignBottom)
+
         col = QVBoxLayout()
         col.addWidget(QLabel("Limiar Nodata"))
         self.spin_alpha = QSpinBox()

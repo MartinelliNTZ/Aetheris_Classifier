@@ -36,6 +36,7 @@ class PipelineConfig:
     activation: str
     dropout_rate: float
     use_mask: bool
+    zero_as_nodata: bool
     nodata_threshold: int
     ram_limit_pct: int
 
@@ -103,6 +104,7 @@ class PipelineConfig:
                 activation=str(data.get("activation", data.get("ativacao", "relu"))),
                 dropout_rate=float(data.get("dropout_rate", data.get("dropout", 0.1))),
                 use_mask=bool(data.get("use_mask", data.get("usar_mascara", True))),
+                zero_as_nodata=bool(data.get("zero_as_nodata", False)),
                 nodata_threshold=int(
                     data.get(
                         "nodata_threshold",
@@ -183,6 +185,7 @@ class PipelineConfig:
             "activation": self.activation,
             "dropout_rate": self.dropout_rate,
             "use_mask": self.use_mask,
+            "zero_as_nodata": self.zero_as_nodata,
             "nodata_threshold": self.nodata_threshold,
             "ram_limit_pct": self.ram_limit_pct,
         }
