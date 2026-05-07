@@ -451,6 +451,28 @@ class AppStyles:
             f"}}"
         )
 
+    @classmethod
+    def btn_remove_style(cls) -> str:
+        """Botao remover — preto arredondado, fonte branca, hover vermelho."""
+        p = cls.P
+        return (
+            f"QPushButton {{"
+            f"  background-color: {p.BG_CARD};"
+            f"  color: white;"
+            f"  border: none;"
+            f"  border-radius: 8px;"
+            f"  padding: 4px 12px;"
+            f"  font-weight: 600;"
+            f"  font-size: 10px;"
+            f"}}"
+            f"QPushButton:hover {{"
+            f"  background-color: {p.DANGER};"
+            f"}}"
+            f"QPushButton:pressed {{"
+            f"  background-color: {p.DANGER_DIM};"
+            f"}}"
+        )
+
     # ────────────────────────────────────────────────────────────────────
     # BADGES
     # ────────────────────────────────────────────────────────────────────

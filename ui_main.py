@@ -486,8 +486,8 @@ class MainWindow(QMainWindow):
         el.setStyleSheet("background-color: transparent; border: none;")
         self.table_shp.setCellWidget(row, 2, el)
         br = QPushButton("Remover")
-        br.setObjectName("btn_danger")
         br.setCursor(Qt.CursorShape.PointingHandCursor)
+        br.setStyleSheet(AppStyles.btn_remove_style())
         br.clicked.connect(lambda checked, r=row: self._remove_shp_row(r))
         self.table_shp.setCellWidget(row, 3, br)
 
