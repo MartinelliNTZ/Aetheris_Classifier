@@ -9,4 +9,5 @@ seaborn
 opencv-python
 shapely
 PySide6
+psutil
 
