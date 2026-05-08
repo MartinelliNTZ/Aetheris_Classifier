@@ -31,3 +31,19 @@ __pycache__/
 *.geojson
 *.json
 report
+# Ambiente virtual Python
+venv/
+.venv/
+.venv
+env/
+
+# Cache Python
+__pycache__/
+*.pyc
+
+# VSCode
+.vscode/
+
+# Build
+build/
+dist/
