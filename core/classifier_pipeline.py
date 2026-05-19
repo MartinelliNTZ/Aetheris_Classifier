@@ -9,7 +9,6 @@ from pathlib import Path
 import threading
 from typing import Callable, Dict, List, Optional, Tuple
 
-import geopandas as gpd
 import tensorflow as tf
 from tensorflow.keras.models import load_model
 from tensorflow.keras.optimizers import Adam
@@ -350,6 +349,8 @@ class ClassifierPipeline:
             }
 
     def _collect_shapefiles_info(self) -> List[Dict[str, object]]:
+        import geopandas as gpd
+
         info: List[Dict[str, object]] = []
         for entry in self.config.shapefiles:
             gdf = gpd.read_file(str(entry.path))

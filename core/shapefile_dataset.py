@@ -1,11 +1,10 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import TYPE_CHECKING, Dict, List, Optional, Tuple
 
-import geopandas as gpd
-import pandas as pd
-from geopandas import GeoDataFrame
+if TYPE_CHECKING:
+    from geopandas import GeoDataFrame
 
 from .pipeline_config import ShapefileEntry
 
@@ -21,7 +20,10 @@ class ShapefileDataset:
             if not entry.path.is_file():
                 raise FileNotFoundError(f"Shapefile não encontrado: {entry.path}")
 
-    def load(self, target_crs: Optional[object] = None) -> GeoDataFrame:
+    def load(self, target_crs: Optional[object] = None) -> "GeoDataFrame":
+        import geopandas as gpd
+        import pandas as pd
+
         self.validate()
         frames = []
         for entry in self.entries:
@@ -33,7 +35,7 @@ class ShapefileDataset:
             frames.append(gdf)
         if not frames:
             raise ValueError("Nenhum shapefile foi carregado")
-        combined = GeoDataFrame(pd.concat(frames, axis=0, ignore_index=True))
+        combined = gpd.GeoDataFrame(pd.concat(frames, axis=0, ignore_index=True))
         combined.crs = frames[0].crs
         return combined
 
